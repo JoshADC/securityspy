@@ -14,13 +14,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
-from pysecspy.secspy_server import SecSpyServer
-from pysecspy.errors import InvalidCredentials, RequestError
-from pysecspy.const import SERVER_ID, SERVER_NAME
+from .pysecspy.secspy_server import SecSpyServer
+from .pysecspy.errors import InvalidCredentials, RequestError
+from .pysecspy.const import SERVER_ID, SERVER_NAME
 
 from .const import (
     CONF_DISABLE_RTSP,
     CONF_MIN_SCORE,
+    CONF_USE_SSL,
     DEFAULT_PORT,
     DEFAULT_MIN_SCORE,
     MIN_SECSPY_VERSION,
@@ -39,7 +40,7 @@ class SecuritySpyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(config_entry):
         """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
@@ -57,6 +58,7 @@ class SecuritySpyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             user_input[CONF_USERNAME],
             user_input[CONF_PASSWORD],
             DEFAULT_MIN_SCORE,
+            use_ssl=user_input.get(CONF_USE_SSL, False),
         )
 
         try:
@@ -94,6 +96,7 @@ class SecuritySpyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_PORT: user_input[CONF_PORT],
                 CONF_USERNAME: user_input.get(CONF_USERNAME),
                 CONF_PASSWORD: user_input.get(CONF_PASSWORD),
+                CONF_USE_SSL: user_input.get(CONF_USE_SSL, False),
             },
             options={
                 CONF_DISABLE_RTSP: False,
@@ -111,6 +114,7 @@ class SecuritySpyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
                     vol.Required(CONF_USERNAME): str,
                     vol.Required(CONF_PASSWORD): str,
+                    vol.Optional(CONF_USE_SSL, default=False): bool,
                 }
             ),
             errors=errors or {},
@@ -119,10 +123,6 @@ class SecuritySpyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle options."""
-
-    def __init__(self, config_entry):
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""

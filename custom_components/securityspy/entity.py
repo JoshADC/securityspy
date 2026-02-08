@@ -46,6 +46,7 @@ class SecuritySpyEntity(Entity):
         self._model = self._device_data["model"]
         self._server_ip = server_info["server_ip_address"]
         self._server_port = server_info["server_port"]
+        self._use_ssl = server_info.get("use_ssl", False)
 
         self._attr_available = self.secspy_data.last_update_success
         if self._sensor_type is None:
@@ -54,6 +55,7 @@ class SecuritySpyEntity(Entity):
             self._attr_unique_id = (
                 f"{self._sensor_type}_{self._server_id}_{self._device_id}"
             )
+        _scheme = "https" if self._use_ssl else "http"
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, self._mac)},
             name=self._device_name,
@@ -61,7 +63,7 @@ class SecuritySpyEntity(Entity):
             model=self._model,
             sw_version=self._firmware_version,
             via_device=(DOMAIN, self._server_id),
-            configuration_url=f"http://{self._server_ip}:{self._server_port}/camerasettings?cameraNum={self._device_id}",
+            configuration_url=f"{_scheme}://{self._server_ip}:{self._server_port}/camerasettings?cameraNum={self._device_id}",
         )
 
     @property

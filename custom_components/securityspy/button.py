@@ -5,7 +5,7 @@ import logging
 
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -92,7 +92,6 @@ class SecuritySpyButtonEntity(SecuritySpyEntity, ButtonEntity):
         self._attr_name = f"{self._device_data['name']} {preset_id.capitalize()}"
         self._attr_device_class = ButtonDeviceClass.UPDATE
 
-    @callback
     async def async_press(self) -> None:
         """Press the button."""
 

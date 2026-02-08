@@ -5,7 +5,7 @@ import logging
 
 from homeassistant.core import callback
 
-from pysecspy.errors import RequestError
+from .pysecspy.errors import RequestError
 
 _LOGGER = logging.getLogger(__name__)
 

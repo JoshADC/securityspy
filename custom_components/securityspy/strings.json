@@ -9,7 +9,7 @@
                     "port": "Http Port Number",
                     "username": "Username",
                     "password": "Password",
-                    "disable_rtsp": "Disable the RTSP stream"
+                    "use_ssl": "Use SSL (HTTPS)"
                 }
             }
         },
@@ -26,10 +26,6 @@
         "step": {
             "init": {
                 "data": {
-                    "host": "IP Address of SecuritySpy Server",
-                    "port": "Http Port Number",
-                    "username": "Username",
-                    "password": "Password",
                     "disable_rtsp": "Disable the RTSP stream"
                 }
             }

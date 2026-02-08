@@ -16,13 +16,14 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.device_registry as dr
-from pysecspy.errors import InvalidCredentials, RequestError
-from pysecspy.secspy_server import SecSpyServer
-from pysecspy.const import SERVER_ID
+from .pysecspy.errors import InvalidCredentials, RequestError
+from .pysecspy.secspy_server import SecSpyServer
+from .pysecspy.const import SERVER_ID
 
 from .const import (
     CONF_DISABLE_RTSP,
     CONF_MIN_SCORE,
+    CONF_USE_SSL,
     CONFIG_OPTIONS,
     DEFAULT_BRAND,
     DEFAULT_MIN_SCORE,
@@ -64,6 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data[CONF_USERNAME],
         entry.data[CONF_PASSWORD],
         entry.options.get(CONF_MIN_SCORE, DEFAULT_MIN_SCORE),
+        use_ssl=entry.data.get(CONF_USE_SSL, False),
     )
 
     secspy_data = SecuritySpyData(hass, securityspyserver)
@@ -131,7 +133,7 @@ async def _async_get_or_create_nvr_device_in_registry(
         identifiers={(DOMAIN, nvr["server_id"])},
         manufacturer=DEFAULT_BRAND,
         name=entry.data[CONF_ID],
-        model="Max OSX Computer",
+        model="Mac OS X Computer",
         sw_version=nvr["server_version"],
     )
 

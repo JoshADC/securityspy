@@ -5,7 +5,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_FILENAME,
 )
-from pysecspy.const import (
+from .pysecspy.const import (
     RECORDING_TYPE_ACTION,
     RECORDING_TYPE_MOTION,
     RECORDING_TYPE_CONTINUOUS,
@@ -22,6 +22,7 @@ MIN_SECSPY_VERSION = "5.3.4"
 
 CONF_MODE = "mode"
 CONF_ENABLED = "enabled"
+CONF_USE_SSL = "use_ssl"
 CONF_DISABLE_RTSP = "disable_rtsp"
 CONF_MIN_SCORE = "min_event_score"
 CONFIG_OPTIONS = [
