@@ -99,7 +99,7 @@ class SecuritySpyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_USE_SSL: user_input.get(CONF_USE_SSL, False),
             },
             options={
-                CONF_DISABLE_RTSP: False,
+                CONF_DISABLE_RTSP: True,
                 CONF_MIN_SCORE: DEFAULT_MIN_SCORE,
             },
         )
