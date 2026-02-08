@@ -1,155 +1,133 @@
-# SecuritySpy for Home Assistant
-![GitHub release](https://img.shields.io/github/release/briis/securityspy.svg?style=flat-square) [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=flat-square)](https://github.com/hacs/integration)
+# SecuritySpy for Home Assistant (Community Fork)
 
-## This Integration will no longer be maintained
+This is a maintained fork of [briis/securityspy](https://github.com/briis/securityspy), the Home Assistant integration for [Ben Software](https://www.bensoftware.com)'s SecuritySpy surveillance system. The original integration was abandoned by its author. This fork fixes several blocking bugs and adds new features.
 
-I did give it a try, but I simply don't have the resources to maintain this integration anymore, and therefore I will remove it from the default HACS store. I will leave the Github Repository open, and I hope that someone else will be able to take it over.
+**Original author:** [@briis](https://github.com/briis) — thank you for building this integration and open-sourcing it.
 
-## Overview
+## What's Fixed in This Fork
 
-This is a Home Assistant Integration for [Ben Software](https://www.bensoftware.com)'s SecuritySpy Surveillance system.
+- **SSL/HTTPS support** — the original only worked over HTTP. This fork adds a "Use SSL" checkbox in the config flow, so it works with SecuritySpy's HTTPS web server.
+- **Schedule preset crash (Issue [#101](https://github.com/briis/securityspy/issues/101))** — the integration would fail to load if SecuritySpy had only one schedule preset. Fixed.
+- **Vendored pysecspy library** — the `pysecspy` dependency (also abandoned) is now bundled directly, so there are no external PyPI dependencies to break.
+- **Home Assistant compatibility** — fixed deprecated `OptionsFlowHandler` pattern and incorrect `@callback` decorator that caused warnings on modern HA versions.
+- **Schedule Preset select entity** — new dropdown entity on the NVR device that lets you activate schedule presets (arm/disarm all cameras at once) directly from your dashboard or automations.
 
-Basically what this does, is integrating the Camera feeds from SecuritySpy in to Home Assistant, adds switches to adjust recording settings and adds Binary Motion Sensors to show if motion has occurred. This project uses a *local push model* to get data from the SecuritySpy Server.
+## Features
 
-There is support for the following devices types within Home Assistant:
-* Camera
-* Binary Sensor
-* Button
-* Sensor
-* Switch
+This integration provides the following entity types:
 
-Please use the *Issues* tab on the repository, to report any errors you may find.
+| Entity Type | What It Does |
+|-------------|-------------|
+| **Camera** | Live RTSP streams and snapshot images |
+| **Binary Sensor** | Motion detection and online/offline status per camera |
+| **Switch** | Arm/disarm motion recording, continuous recording, and actions per camera |
+| **Select** | Activate SecuritySpy schedule presets (master arm/disarm across all cameras) |
+| **Sensor** | Recording mode status and detected object type per camera |
+| **Button** | PTZ controls for cameras with pan/tilt/zoom |
+
+**Note:** There is no audio on live streams, as Home Assistant only supports AAC audio and SecuritySpy sends audio in uLaw format.
 
 ## Prerequisites
 
-Before you install this Integration you need to ensure that the following settings are applied in SecuritySpy:
-
-1. **Enable the Web Server** Open SecuritySpy on your Mac. Select *Preferences* from the SecuritySpy Menu and click the *Web* icon on the Top Left. Make sure that *HTTP enabled on Port* is selected and note the Port number as you need this later. Default is port 8000, but you are free to select another port if you want to. Currently SSL is not supported, so it does not have to be selected, but you can do, if you want to use this with external access.
-
-2. **Add a Web Server User** You must add a user with either *Administrator* privileges or at least *Get Live Video and Images* and *Arm and Disarm, set schedules* privileges. **Note**: This might not be enough, as I have seen some errors, when using a user like that. If you want to be sure that it works for now, give the user *Administrative* rights.
-
-3. This Integration is only guaranteed to work on version 5.3.4 and greater of SecuritySpy.
+1. **Enable the Web Server** in SecuritySpy: Preferences > Web. Note the port number (default 8000). SSL is now supported.
+2. **Add a Web Server User** with *Administrator* privileges, or at minimum *Get Live Video and Images* and *Arm and Disarm, set schedules* privileges.
+3. SecuritySpy version **5.3.4 or newer** is required.
 
 ![Web Server Setup](https://github.com/briis/securityspy/blob/master/support_files/secspy_webserver_sm.png) ![User Setup](https://github.com/briis/securityspy/blob/master/support_files/secspy_users_sm.png)
 
-**Note** As Home Assistant only supports AAC audio format and SecuritySpy only sends audio in µLaw, there is NO AUDIO on the Live Stream. Hopefully this can be corrected in future updates of either of these programs.
-
 ## Installation
 
-### HACS Installation
-This Integration is part of the default HACS store. Search for *securityspy* under *Integrations* and install from there. After the installation of the files you must restart Home Assistant, or else you will not be able to add SecuritySpy from the Integration Page.
+### HACS (Recommended)
 
-If you are not familiar with HACS, or haven't installed it, we would recommend to [look through the HACS documentation](https://hacs.xyz/), before continuing. Even though you can install the Integration manually, we recommend using HACS, as you would always be reminded when a new release is published.
-
-**Please note**: All HACS does, is copying the needed files to Home Assistant, and placing them in the right directory. To get the Integration to work, you now need to go through the steps in the *Configuration* section.
+1. Open HACS in Home Assistant
+2. Click the three-dot menu (top right) > **Custom Repositories**
+3. Paste: `https://github.com/JoshADC/securityspy`
+4. Select category: **Integration**
+5. Click Add, then install **SecuritySpy for Home Assistant**
+6. Restart Home Assistant
 
 ### Manual Installation
 
-To add SecuritySpy to your installation, create this folder structure in your /config directory:
-
-`custom_components/securityspy`.
-Then, drop the following files into that folder:
-
-```yaml
-__init__.py
-binary_sensor.py
-button.py
-camera.py
-config_flow.py
-const.py
-data.py
-entity.py
-manifest.json
-models.py
-sensor.py
-services.yaml
-strings.json
-switch.py
-<translations> (Copy the directory and the files within it)
-```
-
+Copy the `custom_components/securityspy` folder (including the `pysecspy` and `translations` subdirectories) into your Home Assistant `/config/custom_components/` directory and restart.
 
 ## Configuration
-To add SecuritySpy to your installation, go to the Integrations page inside the configuration panel and add a Server by providing the IP Address, Port Username and Password for the SecuritySpy Webserver you set up above.
 
-If the Server is found on the network it will be added to your installation. After that, you can add additional Servers if you have more than one in your network.
+Go to **Settings > Devices & Services > Add Integration** and search for **SecuritySpy**.
 
-**You can only add SecuritySpy through the integrations page, not in configuration files.**
+| Field | Description |
+|-------|-------------|
+| **Host** | IP address of your SecuritySpy Mac (e.g. `192.168.1.10`) |
+| **Port** | Web server port (e.g. `8000` or `8001`) |
+| **Username** | Web server username |
+| **Password** | Web server password |
+| **Use SSL** | Check this if your SecuritySpy web server uses HTTPS |
 
-**host**:
-(string)(Required) Type the IP address of your *SecuritySpy Server*. Example: `192.168.1.10`
+## Schedule Presets
 
-**port**:
-(int)(required) Type the Port number you setup under the *Prerequisites* section. Example: `8000`
+If you have schedule presets configured in SecuritySpy (Preferences > Scheduling > Schedule Presets), they will appear as a **Select** entity on the NVR device. You can use this as a master arm/disarm control on your dashboard or in automations:
 
-**username**:
-(string)(Required) The username you setup under the *Prerequisites* section.
-
-**password**
-(string)(Required) The password you setup under the *Prerequisites* section.
-
-**disable rtsp stream**
-(boolean)(Optional) Mark this box, if you want to diable the RTSP stream - Gives better realtime live streaming.
+```yaml
+# Example: Arm all cameras at sunset
+automation:
+  - alias: Arm cameras at sunset
+    trigger:
+      - platform: sun
+        event: sunset
+    action:
+      - action: select.select_option
+        target:
+          entity_id: select.securityspy_schedule_preset
+        data:
+          option: "Armed"
+```
 
 ## Automation Examples
 
-As part of the integration, we provide a couple of blueprints that you can use or extend to automate stuff.
-
-### Motion Notifications
-
-[![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https://raw.githubusercontent.com/briis/securityspy/master/blueprints/securityspy_push_notification_motion_event.yaml)
-
-
-Here are examples of different automations that can be used with this integration.
-
-### Capture Image when Person is detected
-
-This automation captures an image, when a Person is detected on the Camera. For the example, the Camera is called `camera.outdoor` so the motion sensor will then be named `binary_sensor.motion_outdoor` It is a very basic example, but it can be used to illustrate the use case. `event_object` can be *human* or *vehicle*.
+### Capture Image When Person Is Detected
 
 ```yaml
 alias: Capture snapshot when person is detected
-description: ''
 trigger:
   - platform: state
     entity_id: binary_sensor.motion_outdoor
     attribute: event_object
     to: human
-condition: []
 action:
-  - service: camera.snapshot
+  - action: camera.snapshot
     target:
       entity_id: camera.outdoor
     data:
       filename: /config/www/camera_outdoor.jpg
-mode: single
 ```
 
-### Download Video Recording when motion is complete
-
-If you want to have a copy of the latest Video recording on your local Home Assistant, then the below is an example on how to do that. Again the Camera is called `camera.outdoor` so the motion sensor will then be named `binary_sensor.motion_outdoor`
+### Download Video Recording After Motion
 
 ```yaml
 alias: Download Recording after motion
-description: ''
 trigger:
   - platform: state
     entity_id: binary_sensor.motion_outdoor
-    from: 'on'
-    to: 'off'
-condition: []
+    from: "on"
+    to: "off"
 action:
-  - service: securityspy.download_latest_motion_recording
+  - action: securityspy.download_latest_motion_recording
     data:
       entity_id: camera.outdoor
       filename: /media/outdoor_latest.m4v
 mode: restart
 ```
 
-## Enable Debug Logging
-If logs are needed for debugging or reporting an issue, use the following configuration.yaml:
+## Debug Logging
+
 ```yaml
 logger:
   default: error
   logs:
     custom_components.securityspy: debug
 ```
+
+## Credits
+
+- Original integration by [@briis](https://github.com/briis) ([original repo](https://github.com/briis/securityspy))
+- Fork maintained by [@JoshADC](https://github.com/JoshADC)
+- Bug fixes and new features developed with assistance from [Claude Code](https://claude.ai/claude-code)
