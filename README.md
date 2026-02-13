@@ -36,16 +36,18 @@ This integration provides the following entity types:
 
 ## Installation
 
-This is a custom integration — it is not available in the default HACS repository.
+### HACS (Recommended)
+
+1. Open HACS in Home Assistant
+2. Click the three-dot menu (top right) > **Custom Repositories**
+3. Paste: `https://github.com/JoshADC/securityspy`
+4. Select category: **Integration**
+5. Click **Add**, then find and install **SecuritySpy for Home Assistant**
+6. Restart Home Assistant
 
 ### Manual Installation
 
 Copy the `custom_components/securityspy` folder (including the `pysecspy` and `translations` subdirectories) into your Home Assistant `/config/custom_components/` directory and restart.
-
-```bash
-# Example using scp from the machine where you cloned this repo:
-scp -r custom_components/securityspy user@homeassistant:/config/custom_components/
-```
 
 ## Configuration
 
