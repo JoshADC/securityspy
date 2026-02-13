@@ -2,15 +2,15 @@
     "domain": "securityspy",
     "name": "SecuritySpy for Home Assistant",
     "codeowners": [
-        "@briis"
+        "@JoshADC"
     ],
     "config_flow": true,
     "dependencies": [],
-    "documentation": "https://github.com/briis/securityspy",
+    "documentation": "https://github.com/JoshADC/securityspy",
     "iot_class": "local_push",
-    "issue_tracker": "https://github.com/briis/securityspy/issues",
+    "issue_tracker": "https://github.com/JoshADC/securityspy/issues",
     "requirements": [
         "xmltodict"
     ],
-    "version": "1.2.0-jdc"
+    "version": "1.2.0"
 }

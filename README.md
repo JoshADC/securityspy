@@ -11,6 +11,7 @@ This is a maintained fork of [briis/securityspy](https://github.com/briis/securi
 - **Vendored pysecspy library** — the `pysecspy` dependency (also abandoned) is now bundled directly, so there are no external PyPI dependencies to break.
 - **Home Assistant compatibility** — fixed deprecated `OptionsFlowHandler` pattern and incorrect `@callback` decorator that caused warnings on modern HA versions.
 - **Schedule Preset select entity** — new dropdown entity on the NVR device that lets you activate schedule presets (arm/disarm all cameras at once) directly from your dashboard or automations.
+- **Snapshot mode option** — renamed the confusing "Disable RTSP stream" toggle to "Use snapshot mode instead of RTSP" in the options flow. Snapshot mode is recommended when using HTTPS, since RTSP streams use a separate port that doesn't go through SSL.
 
 ## Features
 
@@ -18,14 +19,14 @@ This integration provides the following entity types:
 
 | Entity Type | What It Does |
 |-------------|-------------|
-| **Camera** | Live RTSP streams and snapshot images |
+| **Camera** | Live RTSP streams or snapshot images (configurable) |
 | **Binary Sensor** | Motion detection and online/offline status per camera |
 | **Switch** | Arm/disarm motion recording, continuous recording, and actions per camera |
 | **Select** | Activate SecuritySpy schedule presets (master arm/disarm across all cameras) |
 | **Sensor** | Recording mode status and detected object type per camera |
 | **Button** | PTZ controls for cameras with pan/tilt/zoom |
 
-**Note:** There is no audio on live streams, as Home Assistant only supports AAC audio and SecuritySpy sends audio in uLaw format.
+**Note on live streams:** When using HTTPS, RTSP video streams won't work because RTSP is a separate protocol that uses the HTTP port. Use snapshot mode (JPEG refresh) instead, which works reliably over both HTTP and HTTPS. When using HTTP with RTSP, audio is not available in Home Assistant.
 
 ## Prerequisites
 
@@ -33,26 +34,24 @@ This integration provides the following entity types:
 2. **Add a Web Server User** with *Administrator* privileges, or at minimum *Get Live Video and Images* and *Arm and Disarm, set schedules* privileges.
 3. SecuritySpy version **5.3.4 or newer** is required.
 
-![Web Server Setup](https://github.com/briis/securityspy/blob/master/support_files/secspy_webserver_sm.png) ![User Setup](https://github.com/briis/securityspy/blob/master/support_files/secspy_users_sm.png)
+![Web Server Setup](https://github.com/JoshADC/securityspy/blob/main/support_files/secspy_webserver_sm.png) ![User Setup](https://github.com/JoshADC/securityspy/blob/main/support_files/secspy_users_sm.png)
 
 ## Installation
 
-### HACS (Recommended)
-
-1. Open HACS in Home Assistant
-2. Click the three-dot menu (top right) > **Custom Repositories**
-3. Paste: `https://github.com/JoshADC/securityspy`
-4. Select category: **Integration**
-5. Click Add, then install **SecuritySpy for Home Assistant**
-6. Restart Home Assistant
+This is a custom integration — it is not available in the default HACS repository.
 
 ### Manual Installation
 
 Copy the `custom_components/securityspy` folder (including the `pysecspy` and `translations` subdirectories) into your Home Assistant `/config/custom_components/` directory and restart.
 
+```bash
+# Example using scp from the machine where you cloned this repo:
+scp -r custom_components/securityspy user@homeassistant:/config/custom_components/
+```
+
 ## Configuration
 
-Go to **Settings > Devices & Services > Add Integration** and search for **SecuritySpy**.
+After installation and restart, go to **Settings > Devices & Services > Add Integration** and search for **SecuritySpy**.
 
 | Field | Description |
 |-------|-------------|
@@ -61,6 +60,8 @@ Go to **Settings > Devices & Services > Add Integration** and search for **Secur
 | **Username** | Web server username |
 | **Password** | Web server password |
 | **Use SSL** | Check this if your SecuritySpy web server uses HTTPS |
+
+After setup, go to the integration's **Options** to toggle snapshot mode (recommended for HTTPS).
 
 ## Schedule Presets
 
@@ -125,6 +126,11 @@ logger:
   logs:
     custom_components.securityspy: debug
 ```
+
+## Known Issues
+
+- **RTSP over HTTPS:** RTSP streams don't work when using SSL because the RTSP URL uses the HTTP port. Use snapshot mode instead.
+- **Event stream reconnection:** If SecuritySpy restarts, the integration's event stream may not reconnect reliably (checked every 120 seconds). Reloading the integration will fix it.
 
 ## Credits
 

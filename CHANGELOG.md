@@ -1,10 +1,37 @@
 # Changelog for SecuritySpy Home Assistant Integration
 
+---
+
+**This is a [community fork](https://github.com/JoshADC/securityspy) of the original [briis/securityspy](https://github.com/briis/securityspy) integration.** Versions 1.2.0+ are from this fork.
+
+---
+
+## Version 1.2.0
+
+Release date: `2026-02-08`
+
+This is the first release of the community fork. It fixes several blocking bugs and adds new features.
+
+### Changes
+
+- `NEW`: **SSL/HTTPS support** — added a "Use SSL" checkbox in the config flow. The original integration only worked over HTTP.
+- `NEW`: **Schedule Preset select entity** — new dropdown entity on the NVR device for activating schedule presets (arm/disarm all cameras) from the dashboard or automations.
+- `FIXED`: **Schedule preset crash** ([Issue #101](https://github.com/briis/securityspy/issues/101)) — the integration failed to load when SecuritySpy had only one schedule preset. `xmltodict` returns a dict instead of a list for single items.
+- `FIXED`: **Vendored pysecspy library** — the abandoned `pysecspy` PyPI package is now bundled directly in `custom_components/securityspy/pysecspy/`, eliminating the external dependency.
+- `FIXED`: **HA compatibility** — fixed deprecated `OptionsFlowHandler.__init__` pattern and removed incorrect `@callback` decorator on async method in `button.py`.
+- `CHANGED`: Renamed confusing "Disable the RTSP stream" option to "Use snapshot mode instead of RTSP (recommended for HTTPS)".
+- `FIXED`: Removed orphaned `enable_disable_camera` service definition.
+- `FIXED`: "Max OSX" typo corrected.
+
+---
+
+*Versions below are from the original [briis/securityspy](https://github.com/briis/securityspy) integration.*
+
+---
+
 ## Version 1.1.9
 
 Release date: `2024-09-23`
-
-**NOTE** I do not have access to the latest version of SecuritySpy, neither do I use it in my home, so these changes have only been tested against an older V5.x system which was temporarely installed. I also have to state that I do NOT maintain this Module anymore, as I simply don't have the resources. If I can I will try and fix issues like this, but eventually the Integration will most likely stop working due to changes in Home Assistant.
 
 ### Changes
 
