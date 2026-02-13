@@ -24,17 +24,15 @@ This integration provides the following entity types:
 | **Switch** | Arm/disarm motion recording, continuous recording, and actions per camera |
 | **Select** | Activate SecuritySpy schedule presets (master arm/disarm across all cameras) |
 | **Sensor** | Recording mode status and detected object type per camera |
-| **Button** | PTZ controls for cameras with pan/tilt/zoom |
+| **Button** | PTZ controls for cameras with pan/tilt/zoom (untested) |
 
 **Note on live streams:** When using HTTPS, RTSP video streams won't work because RTSP is a separate protocol that uses the HTTP port. Use snapshot mode (JPEG refresh) instead, which works reliably over both HTTP and HTTPS. When using HTTP with RTSP, audio is not available in Home Assistant.
 
 ## Prerequisites
 
-1. **Enable the Web Server** in SecuritySpy: Preferences > Web. Note the port number (default 8000). SSL is now supported.
+1. **Enable the Web Server** in SecuritySpy: Settings > Web. Note the port number (default 8000). SSL is now supported.
 2. **Add a Web Server User** with *Administrator* privileges, or at minimum *Get Live Video and Images* and *Arm and Disarm, set schedules* privileges.
 3. SecuritySpy version **5.3.4 or newer** is required.
-
-![Web Server Setup](https://github.com/JoshADC/securityspy/blob/main/support_files/secspy_webserver_sm.png) ![User Setup](https://github.com/JoshADC/securityspy/blob/main/support_files/secspy_users_sm.png)
 
 ## Installation
 
@@ -65,7 +63,7 @@ After setup, go to the integration's **Options** to toggle snapshot mode (recomm
 
 ## Schedule Presets
 
-If you have schedule presets configured in SecuritySpy (Preferences > Scheduling > Schedule Presets), they will appear as a **Select** entity on the NVR device. You can use this as a master arm/disarm control on your dashboard or in automations:
+If you have schedule presets configured in SecuritySpy (Settings > Scheduling > Schedule Presets), they will appear as a **Select** entity on the NVR device. You can use this as a master arm/disarm control on your dashboard or in automations:
 
 ```yaml
 # Example: Arm all cameras at sunset
@@ -83,6 +81,8 @@ automation:
 ```
 
 ## Automation Examples
+
+The following YAML examples are carried over from the original integration and have not been tested with this fork. They should work, but you may prefer to build automations through the Home Assistant UI instead.
 
 ### Capture Image When Person Is Detected
 
