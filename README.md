@@ -1,6 +1,6 @@
 # SecuritySpy for Home Assistant (Community Fork)
 
-This is a maintained fork of [briis/securityspy](https://github.com/briis/securityspy), the Home Assistant integration for [Ben Software](https://www.bensoftware.com)'s SecuritySpy surveillance system. The original integration was abandoned by its author. This fork fixes several blocking bugs and adds new features.
+This is a (hopefully!) maintained fork of [briis/securityspy](https://github.com/briis/securityspy), the Home Assistant integration for [Ben Software](https://www.bensoftware.com)'s SecuritySpy surveillance system. The original integration was abandoned by its author. This fork fixes several blocking bugs and adds new features.
 
 **Original author:** [@briis](https://github.com/briis) — thank you for building this integration and open-sourcing it.
 
