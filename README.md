@@ -82,6 +82,8 @@ automation:
           option: "Armed"
 ```
 
+(Or just do it the easy way and make your automation in the UI and pick it out of the device list.)
+
 ## Automation Examples
 
 The following YAML examples are carried over from the original integration and have not been tested with this fork. They should work, but you may prefer to build automations through the Home Assistant UI instead.
