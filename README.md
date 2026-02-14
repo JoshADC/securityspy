@@ -86,6 +86,8 @@ automation:
 (Or just do it the easy way and make your automation in the UI and pick it out of the device list.)
 <img width="903" height="351" alt="Screenshot 2026-02-13 at 21 06 24" src="https://github.com/user-attachments/assets/96dc4e4b-3c6b-4369-b7c1-c20c911562c7" />
 
+Getting the state of each camera's "Actions" switch position after arming/disarming them and getting a notification that they all switched as expected has been handy for me. One of the problems I'd been having was my HomeKit setup not always listening to Home Helper, so this gives me some peace of mind that each camera's actions actually changed its state. I vibe-coded that automation too, but would be glad to provide an example if anyone wants it, its all YAML.
+
 ## Automation Examples
 
 The following YAML examples are carried over from the original integration and have not been tested with this fork. They should work, but you may prefer to build automations through the Home Assistant UI instead.
