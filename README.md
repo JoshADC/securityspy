@@ -67,6 +67,7 @@ After setup, go to the integration's **Options** to toggle snapshot mode (recomm
 
 If you have schedule presets configured in SecuritySpy (Settings > Scheduling > Schedule Presets), they will appear as a **Select** entity on the NVR device. You can use this as a master arm/disarm control on your dashboard or in automations:
 
+
 ```yaml
 # Example: Arm all cameras at sunset
 automation:
@@ -83,6 +84,7 @@ automation:
 ```
 
 (Or just do it the easy way and make your automation in the UI and pick it out of the device list.)
+<img width="903" height="351" alt="Screenshot 2026-02-13 at 21 06 24" src="https://github.com/user-attachments/assets/96dc4e4b-3c6b-4369-b7c1-c20c911562c7" />
 
 ## Automation Examples
 
