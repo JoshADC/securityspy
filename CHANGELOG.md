@@ -6,6 +6,18 @@
 
 ---
 
+## Version 1.3.0
+
+Release date: `2026-03-07`
+
+### Changes
+
+- `FIXED`: **Event stream reconnection** — the integration silently stopped receiving events when SecuritySpy restarted or the Mac rebooted. Added a periodic 30-second health check that detects a dead event stream and automatically reconnects. Also fixed the HTTP session not being properly reset after disconnect, which prevented reconnection entirely.
+- `FIXED`: **Duplicate cameras** — cameras could appear multiple times in HA when their sequential number changed (e.g., after adding or removing a camera in SecuritySpy). Device identity is now based on the camera name instead of the mutable camera number, so devices stay stable across renumbering.
+- `NEW`: **Reconfigure support** — you can now change the host, port, username, password, and SSL setting from the integration's three-dot menu without deleting and re-adding it. Requires Home Assistant 2024.4 or newer.
+
+**Note:** The stable camera identity change means entity unique IDs have changed. After upgrading, you may need to remove the old integration entry and re-add it. Automations referencing old entity IDs will need to be updated.
+
 ## Version 1.2.0
 
 Release date: `2026-02-08`

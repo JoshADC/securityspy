@@ -138,7 +138,6 @@ logger:
 ## Known Issues
 
 - **RTSP over HTTPS:** RTSP streams don't work when using SSL because the RTSP URL uses the HTTP port. Use snapshot mode instead.
-- **Event stream reconnection:** If SecuritySpy restarts, the integration's event stream may not reconnect reliably (checked every 120 seconds). Reloading the integration will fix it.
 
 ## Credits
 
