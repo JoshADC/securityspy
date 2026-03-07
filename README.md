@@ -12,6 +12,9 @@ This is a (hopefully!) maintained fork of [briis/securityspy](https://github.com
 - **Home Assistant compatibility** — fixed deprecated `OptionsFlowHandler` pattern and incorrect `@callback` decorator that caused warnings on modern HA versions.
 - **Schedule Preset select entity** — new dropdown entity on the NVR device that lets you activate schedule presets (arm/disarm all cameras at once) directly from your dashboard or automations.
 - **Snapshot mode option** — renamed the confusing "Disable RTSP stream" toggle to "Use snapshot mode instead of RTSP" in the options flow. Snapshot mode is recommended when using HTTPS, since RTSP streams use a separate port that doesn't go through SSL.
+- **Automatic reconnection** — the integration now automatically reconnects when SecuritySpy restarts or the Mac reboots. Previously it would silently stop receiving events with no way to recover except reloading.
+- **Stable camera identity** — cameras no longer duplicate in HA when their order changes in SecuritySpy (e.g., after adding or removing a camera). Device identity is now based on the camera name instead of the sequential number.
+- **Reconfigure support** — you can now change host, port, credentials, and SSL from the integration's three-dot menu without deleting and re-adding it.
 
 ## Features
 
