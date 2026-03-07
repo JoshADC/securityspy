@@ -140,12 +140,13 @@ class SecSpyServer:
         self.ws_task = asyncio.ensure_future(self._setup_streamreader())
 
     async def async_disconnect_ws(self):
-        """Disconnect the websocket."""
-        if self.ws_connection is None:
-            return
-
-        await self.ws_connection.wait_for_close()
-        await self.ws_session.close()
+        """Disconnect the event stream."""
+        if self.ws_connection is not None:
+            self.ws_connection.close()
+            self.ws_connection = None
+        if self.ws_session is not None:
+            await self.ws_session.close()
+            self.ws_session = None
 
     async def _get_device_list(self, include_events) -> None:
         """Get a list of devices connected to the NVR."""
@@ -436,9 +437,11 @@ class SecSpyServer:
             _LOGGER.debug("Unhandled error: %s", ed)
             return
         finally:
-            _LOGGER.debug("stream disconnected")
-            await self.async_disconnect_ws()
+            _LOGGER.debug("Event stream disconnected, will reconnect on next refresh")
             self.ws_connection = None
+            if self.ws_session is not None:
+                await self.ws_session.close()
+                self.ws_session = None
 
     def subscribe_websocket(self, ws_callback):
         """Subscribe to websocket events.

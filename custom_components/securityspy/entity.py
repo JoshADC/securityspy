@@ -1,7 +1,8 @@
-"""Shared Entity definition for SecurotySpy Integration."""
+"""Shared Entity definition for SecuritySpy Integration."""
 from __future__ import annotations
 
 import logging
+import re
 
 from homeassistant.const import ATTR_ATTRIBUTION
 import homeassistant.helpers.device_registry as dr
@@ -16,6 +17,11 @@ from .const import (
 from .data import SecuritySpyData
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _slugify_camera_name(name: str) -> str:
+    """Create a stable slug from a camera name."""
+    return re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")
 
 
 class SecuritySpyEntity(Entity):
@@ -38,7 +44,8 @@ class SecuritySpyEntity(Entity):
 
         self._device_data = self.secspy_data.data[self._device_id]
         self._device_name = self._device_data["name"]
-        self._mac = f"{self._device_data['ip_address']}_{self._device_id}"
+        self._camera_slug = _slugify_camera_name(self._device_name)
+        self._mac = f"{server_info['server_id']}_{self._camera_slug}"
         self._firmware_version = server_info["server_version"]
         self._server_id = server_info["server_id"]
         self._schedule_presets = server_info["schedule_presets"]
@@ -50,10 +57,10 @@ class SecuritySpyEntity(Entity):
 
         self._attr_available = self.secspy_data.last_update_success
         if self._sensor_type is None:
-            self._attr_unique_id = f"{self._device_id}_{self._server_id}"
+            self._attr_unique_id = f"{self._camera_slug}_{self._server_id}"
         else:
             self._attr_unique_id = (
-                f"{self._sensor_type}_{self._server_id}_{self._device_id}"
+                f"{self._sensor_type}_{self._server_id}_{self._camera_slug}"
             )
         _scheme = "https" if self._use_ssl else "http"
         self._attr_device_info = DeviceInfo(

@@ -11,6 +11,17 @@
                     "password": "Password",
                     "use_ssl": "Use SSL (HTTPS)"
                 }
+            },
+            "reconfigure": {
+                "title": "Reconfigure SecuritySpy",
+                "description": "Update the connection settings for your SecuritySpy server.",
+                "data": {
+                    "host": "IP Address of SecuritySpy Server",
+                    "port": "Http Port Number",
+                    "username": "Username",
+                    "password": "Password",
+                    "use_ssl": "Use SSL (HTTPS)"
+                }
             }
         },
         "error": {
@@ -19,7 +30,8 @@
             "version_old": "The installed version of SecuritySpy is not compatible with this version of the Integration. Please upgrade SecuritySpy and try again."
         },
         "abort": {
-            "server_exists": "SecuritySpy Server allready configured."
+            "server_exists": "SecuritySpy Server allready configured.",
+            "reconfigure_successful": "Configuration updated successfully."
         }
     },
     "options": {

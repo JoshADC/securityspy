@@ -2,12 +2,16 @@
 from __future__ import annotations
 
 import logging
+from datetime import timedelta
 
 from homeassistant.core import callback
+from homeassistant.helpers.event import async_track_time_interval
 
 from .pysecspy.errors import RequestError
 
 _LOGGER = logging.getLogger(__name__)
+
+REFRESH_INTERVAL = timedelta(seconds=30)
 
 
 class SecuritySpyData:
@@ -21,6 +25,7 @@ class SecuritySpyData:
         self.data = {}
         self._subscriptions = {}
         self._unsub_websocket = None
+        self._unsub_interval = None
         self.last_update_success = False
 
     async def async_setup(self):
@@ -29,9 +34,15 @@ class SecuritySpyData:
             self._async_process_updates
         )
         await self.async_refresh()
+        self._unsub_interval = async_track_time_interval(
+            self._hass, self.async_refresh, REFRESH_INTERVAL
+        )
 
     async def async_stop(self):
         """Stop processing data."""
+        if self._unsub_interval:
+            self._unsub_interval()
+            self._unsub_interval = None
         if self._unsub_websocket:
             self._unsub_websocket()
             self._unsub_websocket = None

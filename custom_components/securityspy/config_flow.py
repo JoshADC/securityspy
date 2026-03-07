@@ -104,6 +104,59 @@ class SecuritySpyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
+    async def async_step_reconfigure(self, user_input=None):
+        """Handle reconfiguration of the integration."""
+        errors = {}
+        entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            session = async_create_clientsession(self.hass)
+            secspy = SecSpyServer(
+                session,
+                user_input[CONF_HOST],
+                user_input[CONF_PORT],
+                user_input[CONF_USERNAME],
+                user_input[CONF_PASSWORD],
+                DEFAULT_MIN_SCORE,
+                use_ssl=user_input.get(CONF_USE_SSL, False),
+            )
+
+            try:
+                server_info = await secspy.get_server_information()
+            except InvalidCredentials:
+                errors["base"] = "connection_error"
+            except RequestError:
+                errors["base"] = "nvr_error"
+            else:
+                if server_info["server_version"] < MIN_SECSPY_VERSION:
+                    errors["base"] = "version_old"
+                else:
+                    return self.async_update_reload_and_abort(
+                        entry,
+                        data={
+                            CONF_ID: f"{server_info[SERVER_NAME]} ({server_info['server_ip_address']})",
+                            CONF_HOST: user_input[CONF_HOST],
+                            CONF_PORT: user_input[CONF_PORT],
+                            CONF_USERNAME: user_input[CONF_USERNAME],
+                            CONF_PASSWORD: user_input[CONF_PASSWORD],
+                            CONF_USE_SSL: user_input.get(CONF_USE_SSL, False),
+                        },
+                    )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST, default=entry.data.get(CONF_HOST, "")): str,
+                    vol.Required(CONF_PORT, default=entry.data.get(CONF_PORT, DEFAULT_PORT)): int,
+                    vol.Required(CONF_USERNAME, default=entry.data.get(CONF_USERNAME, "")): str,
+                    vol.Required(CONF_PASSWORD, default=entry.data.get(CONF_PASSWORD, "")): str,
+                    vol.Optional(CONF_USE_SSL, default=entry.data.get(CONF_USE_SSL, False)): bool,
+                }
+            ),
+            errors=errors,
+        )
+
     async def _show_setup_form(self, errors=None):
         """Show the setup form to the user."""
         return self.async_show_form(
