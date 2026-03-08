@@ -19,6 +19,7 @@ from .const import (
     ATTR_EVENT_SCORE_HUMAN,
     ATTR_EVENT_SCORE_VEHICLE,
     DEVICE_CLASS_DETECTION,
+    DEVICE_CLASS_SCORE,
     DOMAIN,
     RECORDING_TYPE_ACTION,
     RECORDING_TYPE_CONTINUOUS,
@@ -56,6 +57,27 @@ SENSOR_ENTITIES: tuple[SecuritySpyEntityDescription, ...] = (
         name="Detected Object",
         icon="mdi:selection-search",
         device_type=DEVICE_CLASS_DETECTION,
+    ),
+    SecuritySpyEntityDescription(
+        key="human_score",
+        name="Human Score",
+        icon="mdi:account",
+        device_type=DEVICE_CLASS_SCORE,
+        entity_registry_enabled_default=False,
+    ),
+    SecuritySpyEntityDescription(
+        key="vehicle_score",
+        name="Vehicle Score",
+        icon="mdi:car",
+        device_type=DEVICE_CLASS_SCORE,
+        entity_registry_enabled_default=False,
+    ),
+    SecuritySpyEntityDescription(
+        key="animal_score",
+        name="Animal Score",
+        icon="mdi:paw",
+        device_type=DEVICE_CLASS_SCORE,
+        entity_registry_enabled_default=False,
     ),
 )
 _LOGGER = logging.getLogger(__name__)
@@ -125,6 +147,13 @@ class SecuritySpySensor(SecuritySpyEntity, SensorEntity):
             return self._device_data["recording_mode_m"]
         if self._description.device_type == DEVICE_CLASS_DETECTION:
             return self._device_data["event_object"]
+        if self._description.device_type == DEVICE_CLASS_SCORE:
+            score_key = {
+                "human_score": ATTR_EVENT_SCORE_HUMAN,
+                "vehicle_score": ATTR_EVENT_SCORE_VEHICLE,
+                "animal_score": ATTR_EVENT_SCORE_ANIMAL,
+            }.get(self._description.key)
+            return self._device_data.get(score_key, 0)
         return None
 
     @property
