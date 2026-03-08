@@ -19,6 +19,8 @@ from .const import (
 from .entity import SecuritySpyEntity
 from .models import SecSpyRequiredKeysMixin
 
+DEVICE_TYPE_CAMERA_ENABLED = "camera_enabled"
+
 
 @dataclass(frozen=True, kw_only=True)
 class SecSpyBinarySwitchDescription(SecSpyRequiredKeysMixin, SwitchEntityDescription):
@@ -26,6 +28,16 @@ class SecSpyBinarySwitchDescription(SecSpyRequiredKeysMixin, SwitchEntityDescrip
 
 
 SWITCH_ENTITIES: tuple[SecSpyBinarySwitchDescription, ...] = (
+    # Disabled by default: unlike arm/disarm which use dedicated GET endpoints,
+    # this POSTs to the settings-cameras configuration endpoint. It's meant for
+    # setup (e.g. disabling interior cameras when home), not routine toggling.
+    SecSpyBinarySwitchDescription(
+        key="camera_enabled",
+        name="Enabled",
+        icon="mdi:video-check",
+        device_type=DEVICE_TYPE_CAMERA_ENABLED,
+        entity_registry_enabled_default=False,
+    ),
     SecSpyBinarySwitchDescription(
         key="enable_action",
         name="Actions",
@@ -100,6 +112,8 @@ class SecuritySpySwitch(SecuritySpyEntity, SwitchEntity):
     @property
     def is_on(self):
         """Return true if device is on."""
+        if self._description.device_type == DEVICE_TYPE_CAMERA_ENABLED:
+            return self._device_data.get("enabled", True)
         if self._description.device_type == RECORDING_TYPE_ACTION:
             return self._device_data["recording_mode_a"]
         if self._description.device_type == RECORDING_TYPE_MOTION:
@@ -109,13 +123,16 @@ class SecuritySpySwitch(SecuritySpyEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        if self._description.device_type == RECORDING_TYPE_ACTION:
+        if self._description.device_type == DEVICE_TYPE_CAMERA_ENABLED:
+            _LOGGER.debug("Enabling camera %s", self._device_name)
+            await self.secspy.enable_camera(self._device_id, True)
+        elif self._description.device_type == RECORDING_TYPE_ACTION:
             _LOGGER.debug("Turning on Actions")
             await self.secspy.set_arm_mode(self._device_id, RECORDING_TYPE_ACTION, True)
-        if self._description.device_type == RECORDING_TYPE_MOTION:
+        elif self._description.device_type == RECORDING_TYPE_MOTION:
             _LOGGER.debug("Turning on Motion Recording")
             await self.secspy.set_arm_mode(self._device_id, RECORDING_TYPE_MOTION, True)
-        if self._description.device_type == RECORDING_TYPE_CONTINUOUS:
+        elif self._description.device_type == RECORDING_TYPE_CONTINUOUS:
             _LOGGER.debug("Turning on Continuous Recording")
             await self.secspy.set_arm_mode(
                 self._device_id, RECORDING_TYPE_CONTINUOUS, True
@@ -125,9 +142,13 @@ class SecuritySpySwitch(SecuritySpyEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        _LOGGER.debug("Turning off Action or Recording")
-        await self.secspy.set_arm_mode(
-            self._device_id, self._description.device_type, False
-        )
+        if self._description.device_type == DEVICE_TYPE_CAMERA_ENABLED:
+            _LOGGER.debug("Disabling camera %s", self._device_name)
+            await self.secspy.enable_camera(self._device_id, False)
+        else:
+            _LOGGER.debug("Turning off Action or Recording")
+            await self.secspy.set_arm_mode(
+                self._device_id, self._description.device_type, False
+            )
 
         await self.secspy_data.async_refresh(force_camera_update=True)

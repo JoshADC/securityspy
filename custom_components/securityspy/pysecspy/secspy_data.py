@@ -53,8 +53,12 @@ def process_camera(server_id, server_credential, camera, include_events):
     camera_id = camera["number"]
     # Get if camera is online
     online = camera["connected"] == "yes"
-    # Get if camera is enabled
-    enabled = camera.get("enabled")
+    # Get if camera is enabled (API returns "yes"/"no", internal uses bool)
+    enabled_raw = camera.get("enabled")
+    if isinstance(enabled_raw, bool):
+        enabled = enabled_raw
+    else:
+        enabled = enabled_raw != "no" if enabled_raw is not None else True
     # Get Recording Mode
     if camera.get("recordingSettings_A") is not None:
         recording_mode_a = camera.get("recordingSettings_A")

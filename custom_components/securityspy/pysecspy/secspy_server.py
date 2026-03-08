@@ -347,12 +347,13 @@ class SecSpyServer:
 
         _enable = 1 if enabled else 0
 
-        cam_uri = f"{self._base_url}/camerasettings?auth={self._token}"
-        data = f"cameraNum={camera_id}&camEnabledCheck={_enable}&action=save"
+        cam_uri = f"{self._base_url}/settings-cameras"
+        headers = {"Authorization": f"Basic {self._token}"}
+        data = f"cameraNum={camera_id}&enabled={_enable}"
 
         response = await self.req.post(
             cam_uri,
-            headers=self.headers,
+            headers=headers,
             data=data,
             ssl=False,
         )
@@ -385,7 +386,7 @@ class SecSpyServer:
             _LOGGER.debug("Processing Camera %s", camera_id)
             if self._is_first_update:
                 self._update_device(camera_id, PROCESSED_EVENT_EMPTY)
-                camera["enabled"] = True
+                camera.setdefault("enabled", "yes")
             self._device_state_machine.update(camera_id, camera)
             self._update_device(
                 camera_id,
