@@ -427,10 +427,10 @@ class SecSpyServer:
                     try:
                         self._process_ws_message(data)
                     except Exception as err:
-                        _LOGGER.exception(
-                            "Error processing stream message. Error: %s", err
+                        _LOGGER.warning(
+                            "Error processing stream message, skipping: %s", err
                         )
-                        return
+                        continue
                 await asyncio.sleep(0)
         except client_exceptions.ClientConnectionError:
             return
