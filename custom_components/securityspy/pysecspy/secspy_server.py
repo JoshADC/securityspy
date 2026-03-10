@@ -435,10 +435,10 @@ class SecSpyServer:
         except client_exceptions.ClientConnectionError:
             return
         except Exception as ed:
-            _LOGGER.debug("Unhandled error: %s", ed)
+            _LOGGER.warning("Event stream died from unhandled error: %s", ed)
             return
         finally:
-            _LOGGER.debug("Event stream disconnected, will reconnect on next refresh")
+            _LOGGER.warning("Event stream disconnected, will reconnect on next refresh")
             self.ws_connection = None
             if self.ws_session is not None:
                 await self.ws_session.close()
