@@ -169,6 +169,10 @@ async def _async_migrate_unique_ids(
                 )
                 migrated += 1
                 _LOGGER.debug("Migrated entity %s: %s -> %s", entity_entry.entity_id, uid, new_uid)
+            else:
+                # New-format entity already exists; remove the orphaned old one
+                entity_registry.async_remove(entity_entry.entity_id)
+                _LOGGER.debug("Removed orphaned entity %s (replaced by %s)", entity_entry.entity_id, existing)
 
     if migrated:
         _LOGGER.info(
