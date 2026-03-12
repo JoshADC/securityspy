@@ -16,6 +16,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers import entity_registry as er
+from .entity import _slugify_camera_name
 from .pysecspy.errors import InvalidCredentials, RequestError
 from .pysecspy.secspy_server import SecSpyServer
 from .pysecspy.const import SERVER_ID
@@ -92,6 +94,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not secspy_data.last_update_success:
         raise ConfigEntryNotReady
 
+    await _async_migrate_unique_ids(hass, entry, server_info, secspy_data)
+
     update_listener = entry.add_update_listener(_async_options_updated)
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = securityspyserver
@@ -121,6 +125,55 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     return True
+
+
+async def _async_migrate_unique_ids(
+    hass: HomeAssistant, entry: ConfigEntry, server_info, secspy_data
+) -> None:
+    """Migrate entity unique_ids from camera-number-based to camera-name-based format.
+
+    Before March 7 2026, unique_ids used the mutable SecuritySpy camera index number.
+    They now use a stable slug derived from the camera name. This migration updates any
+    existing registry entries so users don't end up with orphaned entities after updating.
+    """
+    entity_registry = er.async_get(hass)
+    server_id = server_info["server_id"]
+    migrated = 0
+
+    for entity_entry in er.async_entries_for_config_entry(entity_registry, entry.entry_id):
+        uid = entity_entry.unique_id
+        new_uid = None
+
+        for device_id, camera_data in secspy_data.data.items():
+            camera_slug = _slugify_camera_name(camera_data["name"])
+
+            # Camera entity format: "{device_id}_{server_id}"
+            if uid == f"{device_id}_{server_id}":
+                new_uid = f"{camera_slug}_{server_id}"
+                break
+
+            # Sensor/switch/binary_sensor/button format: "{sensor_type}_{server_id}_{device_id}"
+            old_suffix = f"_{server_id}_{device_id}"
+            if uid.endswith(old_suffix):
+                sensor_type = uid[: -len(old_suffix)]
+                new_uid = f"{sensor_type}_{server_id}_{camera_slug}"
+                break
+
+        if new_uid and new_uid != uid:
+            existing = entity_registry.async_get_entity_id(
+                entity_entry.domain, entity_entry.platform, new_uid
+            )
+            if existing is None:
+                entity_registry.async_update_entity(
+                    entity_entry.entity_id, new_unique_id=new_uid
+                )
+                migrated += 1
+                _LOGGER.debug("Migrated entity %s: %s -> %s", entity_entry.entity_id, uid, new_uid)
+
+    if migrated:
+        _LOGGER.info(
+            "SecuritySpy: migrated %d entity unique IDs to name-based format", migrated
+        )
 
 
 async def _async_get_or_create_nvr_device_in_registry(
