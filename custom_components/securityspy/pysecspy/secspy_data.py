@@ -279,6 +279,11 @@ def process_event(event):
         "event_online": event_online,
     }
 
+    # Also update the API-level "online" field so entities using it
+    # get real-time updates from the event stream, not just 30s polls
+    if event_online is not None:
+        processed_event["online"] = event_online
+
     if event_type in (EVENT_MOTION, EVENT_SMART_DETECT_ZONE):
         processed_event["last_motion"] = start_time
         if not end:

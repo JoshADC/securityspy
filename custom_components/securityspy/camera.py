@@ -118,7 +118,7 @@ class SecuritySpyCamera(SecuritySpyEntity, Camera):
                 self._device_data["recording_mode_c"]
                 or self._device_data["recording_mode_m"]
             )
-            and self._device_data["event_online"]
+            and self._device_data["online"]
         )
 
     @property
@@ -177,7 +177,7 @@ class SecuritySpyCamera(SecuritySpyEntity, Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return the Camera Image."""
-        if self._device_data["event_online"]:
+        if self._device_data["online"]:
             last_image = await self.secspy.get_snapshot_image(
                 self._device_id, width, height
             )

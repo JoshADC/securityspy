@@ -46,7 +46,7 @@ BINARY_SENSORS: tuple[SecSpyBinaryEntityDescription, ...] = (
         key="online",
         icon="mdi:access-point-network",
         name="Online",
-        trigger_field="event_online",
+        trigger_field="online",
     ),
 )
 
