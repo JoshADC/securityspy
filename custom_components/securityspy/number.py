@@ -112,6 +112,7 @@ class SecuritySpyNumber(SecuritySpyEntity, NumberEntity):
         super().__init__(
             secspy_object, secspy_data, server_info, device_id, description.key
         )
+        self.entity_description = description
         self._description = description
         self._attr_name = f"{self._device_data['name']} {self._description.name}"
         self._attr_icon = self._description.icon

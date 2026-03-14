@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from aiohttp.client_exceptions import ServerDisconnectedError
+from aiohttp import ClientError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ID,
@@ -77,7 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except InvalidCredentials as unauthex:
         _LOGGER.error("Could not authorize against SecuritySpy. Error: %s.", unauthex)
         return False
-    except (RequestError, ServerDisconnectedError) as notreadyerror:
+    except (RequestError, ClientError) as notreadyerror:
         raise ConfigEntryNotReady from notreadyerror
 
     if server_info["server_version"] < MIN_SECSPY_VERSION:
