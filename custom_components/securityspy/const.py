@@ -77,5 +77,6 @@ SECURITYSPY_PLATFORMS = [
     "switch",
     "button",
     "select",
+    "number",
 ]
 

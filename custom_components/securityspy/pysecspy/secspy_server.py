@@ -340,6 +340,41 @@ class SecSpyServer:
 
         return True
 
+    async def get_camera_settings(self, camera_id: str) -> dict:
+        """Fetch per-camera settings from /settings-cameras (XML)."""
+        cam_uri = f"{self._base_url}/settings-cameras?cameraNum={camera_id}&format=xml&auth={self._token}"
+        response = await self.req.get(
+            cam_uri,
+            headers=self.headers,
+            ssl=False,
+        )
+        if response.status != 200:
+            raise RequestError(
+                f"Fetching camera settings failed: {response.status} - Reason: {response.reason}"
+            )
+        data = await response.read()
+        import xml.etree.ElementTree as ET
+        root = ET.fromstring(data)
+        return {child.tag: child.text for child in root}
+
+    async def set_camera_setting(self, camera_id: str, setting: str, value) -> bool:
+        """Set a single camera setting via POST to /settings-cameras."""
+        cam_uri = f"{self._base_url}/settings-cameras"
+        headers = {"Authorization": f"Basic {self._token}"}
+        data = f"cameraNum={camera_id}&{setting}={value}"
+
+        response = await self.req.post(
+            cam_uri,
+            headers=headers,
+            data=data,
+            ssl=False,
+        )
+        if response.status != 200:
+            raise RequestError(
+                f"Setting camera setting failed: {response.status} - Reason: {response.reason}"
+            )
+        return True
+
     async def enable_camera(self, camera_id: str, enabled: bool) -> bool:
         """Enables or disables the camera.
         Valid input for enabled is True or False
