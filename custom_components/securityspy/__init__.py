@@ -26,6 +26,7 @@ from .const import (
     CONF_DISABLE_RTSP,
     CONF_MIN_SCORE,
     CONF_USE_SSL,
+    CONF_VERIFY_SSL,
     CONFIG_OPTIONS,
     DEFAULT_BRAND,
     DEFAULT_MIN_SCORE,
@@ -68,6 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data[CONF_PASSWORD],
         entry.options.get(CONF_MIN_SCORE, DEFAULT_MIN_SCORE),
         use_ssl=entry.data.get(CONF_USE_SSL, False),
+        verify_ssl=entry.data.get(CONF_VERIFY_SSL, False),
     )
 
     secspy_data = SecuritySpyData(hass, securityspyserver)

@@ -23,6 +23,7 @@ MIN_SECSPY_VERSION = "5.3.4"
 CONF_MODE = "mode"
 CONF_ENABLED = "enabled"
 CONF_USE_SSL = "use_ssl"
+CONF_VERIFY_SSL = "verify_ssl"
 CONF_DISABLE_RTSP = "disable_rtsp"
 CONF_MIN_SCORE = "min_event_score"
 CONFIG_OPTIONS = [

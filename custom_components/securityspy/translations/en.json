@@ -9,7 +9,8 @@
                     "port": "Http Port Number",
                     "username": "Username",
                     "password": "Password",
-                    "use_ssl": "Use SSL (HTTPS)"
+                    "use_ssl": "Use SSL (HTTPS)",
+                    "verify_ssl": "Verify SSL certificate"
                 }
             },
             "reconfigure": {
@@ -20,7 +21,8 @@
                     "port": "Http Port Number",
                     "username": "Username",
                     "password": "Password",
-                    "use_ssl": "Use SSL (HTTPS)"
+                    "use_ssl": "Use SSL (HTTPS)",
+                    "verify_ssl": "Verify SSL certificate"
                 }
             }
         },

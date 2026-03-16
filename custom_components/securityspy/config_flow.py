@@ -22,6 +22,7 @@ from .const import (
     CONF_DISABLE_RTSP,
     CONF_MIN_SCORE,
     CONF_USE_SSL,
+    CONF_VERIFY_SSL,
     DEFAULT_PORT,
     DEFAULT_MIN_SCORE,
     MIN_SECSPY_VERSION,
@@ -59,6 +60,7 @@ class SecuritySpyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             user_input[CONF_PASSWORD],
             DEFAULT_MIN_SCORE,
             use_ssl=user_input.get(CONF_USE_SSL, False),
+            verify_ssl=user_input.get(CONF_VERIFY_SSL, False),
         )
 
         try:
@@ -97,6 +99,7 @@ class SecuritySpyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_USERNAME: user_input.get(CONF_USERNAME),
                 CONF_PASSWORD: user_input.get(CONF_PASSWORD),
                 CONF_USE_SSL: user_input.get(CONF_USE_SSL, False),
+                CONF_VERIFY_SSL: user_input.get(CONF_VERIFY_SSL, False),
             },
             options={
                 CONF_DISABLE_RTSP: True,
@@ -119,6 +122,7 @@ class SecuritySpyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_PASSWORD],
                 DEFAULT_MIN_SCORE,
                 use_ssl=user_input.get(CONF_USE_SSL, False),
+                verify_ssl=user_input.get(CONF_VERIFY_SSL, False),
             )
 
             try:
@@ -140,6 +144,7 @@ class SecuritySpyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                             CONF_USERNAME: user_input[CONF_USERNAME],
                             CONF_PASSWORD: user_input[CONF_PASSWORD],
                             CONF_USE_SSL: user_input.get(CONF_USE_SSL, False),
+                            CONF_VERIFY_SSL: user_input.get(CONF_VERIFY_SSL, False),
                         },
                     )
 
@@ -152,6 +157,7 @@ class SecuritySpyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_USERNAME, default=entry.data.get(CONF_USERNAME, "")): str,
                     vol.Required(CONF_PASSWORD, default=entry.data.get(CONF_PASSWORD, "")): str,
                     vol.Optional(CONF_USE_SSL, default=entry.data.get(CONF_USE_SSL, False)): bool,
+                    vol.Optional(CONF_VERIFY_SSL, default=entry.data.get(CONF_VERIFY_SSL, False)): bool,
                 }
             ),
             errors=errors,
@@ -168,6 +174,7 @@ class SecuritySpyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_USERNAME): str,
                     vol.Required(CONF_PASSWORD): str,
                     vol.Optional(CONF_USE_SSL, default=False): bool,
+                    vol.Optional(CONF_VERIFY_SSL, default=False): bool,
                 }
             ),
             errors=errors or {},

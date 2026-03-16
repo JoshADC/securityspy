@@ -52,6 +52,7 @@ class SecSpyServer:
         password: str,
         min_classify_score: int = 50,
         use_ssl: bool = False,
+        verify_ssl: bool = False,
     ):
         self._host = host
         self._port = port
@@ -59,6 +60,8 @@ class SecSpyServer:
         self._password = password
         self._min_classify_score = min_classify_score
         self._use_ssl = use_ssl
+        self._verify_ssl = verify_ssl
+        self._ssl_context = None if not use_ssl else verify_ssl
         self._base_url = (
             f"https://{host}:{port}" if self._use_ssl else f"http://{host}:{port}"
         )
@@ -155,7 +158,7 @@ class SecSpyServer:
         response = await self.req.get(
             system_uri,
             headers=self.headers,
-            ssl=False,
+            ssl=self._ssl_context,
         )
         if response.status != 200:
             raise RequestError(
@@ -177,7 +180,7 @@ class SecSpyServer:
         response = await self.req.get(
             system_uri,
             headers=self.headers,
-            ssl=False,
+            ssl=self._ssl_context,
         )
         if response.status != 200:
             raise RequestError(
@@ -229,7 +232,7 @@ class SecSpyServer:
         response = await self.req.get(
             image_uri,
             headers=self.headers,
-            ssl=False,
+            ssl=self._ssl_context,
         )
         if response.status != 200:
             raise RequestError(
@@ -245,7 +248,7 @@ class SecSpyServer:
         response = await self.req.get(
             file_uri,
             headers=self.headers,
-            ssl=False,
+            ssl=self._ssl_context,
         )
         if response.status != 200:
             raise RequestError(
@@ -262,7 +265,7 @@ class SecSpyServer:
         response = await self.req.get(
             video_uri,
             headers=self.headers,
-            ssl=False,
+            ssl=self._ssl_context,
         )
         if response.status != 200:
             raise RequestError(
@@ -294,7 +297,7 @@ class SecSpyServer:
         response = await self.req.get(
             cam_uri,
             headers=self.headers,
-            ssl=False,
+            ssl=self._ssl_context,
         )
         if response.status != 200:
             raise RequestError(
@@ -315,7 +318,7 @@ class SecSpyServer:
         response = await self.req.get(
             cam_uri,
             headers=self.headers,
-            ssl=False,
+            ssl=self._ssl_context,
         )
         if response.status != 200:
             raise RequestError(
@@ -331,7 +334,7 @@ class SecSpyServer:
         response = await self.req.get(
             cam_uri,
             headers=self.headers,
-            ssl=False,
+            ssl=self._ssl_context,
         )
         if response.status != 200:
             raise RequestError(
@@ -346,7 +349,7 @@ class SecSpyServer:
         response = await self.req.get(
             cam_uri,
             headers=self.headers,
-            ssl=False,
+            ssl=self._ssl_context,
         )
         if response.status != 200:
             raise RequestError(
@@ -367,7 +370,7 @@ class SecSpyServer:
             cam_uri,
             headers=headers,
             data=data,
-            ssl=False,
+            ssl=self._ssl_context,
         )
         if response.status != 200:
             raise RequestError(
@@ -390,7 +393,7 @@ class SecSpyServer:
             cam_uri,
             headers=headers,
             data=data,
-            ssl=False,
+            ssl=self._ssl_context,
         )
         if response.status != 200:
             raise RequestError(
@@ -452,7 +455,7 @@ class SecSpyServer:
             self.ws_session = aiohttp.ClientSession(timeout=timeout)
         _LOGGER.debug("Receiving from: %s", url)
 
-        self.ws_connection = await self.ws_session.request("get", url, ssl=False)
+        self.ws_connection = await self.ws_session.request("get", url, ssl=self._ssl_context)
         try:
             async for msg in self.ws_connection.content:
                 if self.ws_connection.closed:
