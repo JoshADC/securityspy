@@ -17,7 +17,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers import entity_registry as er
-from .entity import _slugify_camera_name
+from .const import slugify_camera_name
 from .pysecspy.errors import InvalidCredentials, RequestError
 from .pysecspy.secspy_server import SecSpyServer
 from .pysecspy.const import SERVER_ID
@@ -147,7 +147,7 @@ async def _async_migrate_unique_ids(
         new_uid = None
 
         for device_id, camera_data in secspy_data.data.items():
-            camera_slug = _slugify_camera_name(camera_data["name"])
+            camera_slug = slugify_camera_name(camera_data["name"])
 
             # Camera entity format: "{device_id}_{server_id}"
             if uid == f"{device_id}_{server_id}":
@@ -206,6 +206,35 @@ async def async_handle_enable_schedule_preset(hass, entry, service_entries):
     secspy = entry_data["nvr"]
 
     await secspy.enable_schedule_preset(preset_id)
+
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, entry: ConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Allow device removal from the UI.
+
+    Returning True tells HA it's OK to delete this device and its entities.
+    We also clean up the data coordinator's internal state so the device
+    doesn't reappear on the next poll (if it's still in SecuritySpy, the
+    next full refresh will re-create it — same as the service call).
+    """
+    entry_data = hass.data[DOMAIN].get(entry.entry_id)
+    if entry_data:
+        secspy_data = entry_data["secspy_data"]
+        server_id = entry_data["server_info"]["server_id"]
+        for device_id, cam_data in list(secspy_data.data.items()):
+            cam_slug = slugify_camera_name(cam_data["name"])
+            mac = f"{server_id}_{cam_slug}"
+            if (dr.CONNECTION_NETWORK_MAC, mac) in device_entry.connections:
+                secspy_data.data.pop(device_id, None)
+                secspy_data._subscriptions.pop(device_id, None)
+                _LOGGER.info(
+                    "Camera '%s' removed via UI", cam_data.get("name", device_id)
+                )
+                break
+
+    return True
 
 
 async def _async_options_updated(hass: HomeAssistant, entry: ConfigEntry):

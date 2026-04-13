@@ -1,10 +1,17 @@
 """Constant definitions for SecuritySpy Integration."""
+import re
+
 import voluptuous as vol
 from homeassistant.helpers import config_validation as cv
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_FILENAME,
 )
+
+
+def slugify_camera_name(name: str) -> str:
+    """Create a stable slug from a camera name."""
+    return re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")
 from .pysecspy.const import (
     RECORDING_TYPE_ACTION,
     RECORDING_TYPE_MOTION,
