@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.const import ATTR_ATTRIBUTION, MAJOR_VERSION, MINOR_VERSION
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.entity import Entity, DeviceInfo
 
@@ -11,11 +11,17 @@ from .const import (
     ATTR_BRAND,
     DEFAULT_ATTRIBUTION,
     DEFAULT_BRAND,
+    DOMAIN,
     slugify_camera_name,
 )
 from .data import SecuritySpyData
 
 _LOGGER = logging.getLogger(__name__)
+
+# The device registry only accepts `via_device_id` from HA 2026.8 onward. Older
+# cores take the `via_device` tuple, which is deprecated but still the only
+# option there.
+_SUPPORTS_VIA_DEVICE_ID = (MAJOR_VERSION, MINOR_VERSION) >= (2026, 8)
 
 
 class SecuritySpyEntity(Entity):
@@ -65,12 +71,16 @@ class SecuritySpyEntity(Entity):
             sw_version=self._firmware_version,
             configuration_url=f"{_scheme}://{self._server_ip}:{self._server_port}/camerasettings?cameraNum={self._device_id}",
         )
-        # HA 2026.9 dropped `via_device` from DeviceInfo (deprecated, removed in
-        # 2027.8) in favour of `via_device_id`. Passing the old parameter raises a
-        # RuntimeError when HA cannot attribute the calling integration frame, which
-        # aborted the camera entities at startup. Link to the NVR by registry id.
-        if server_device_id := server_info.get("server_device_id"):
-            device_info["via_device_id"] = server_device_id
+        # HA 2026.9 dropped `via_device` from DeviceInfo (removed in 2027.8) in
+        # favour of `via_device_id`. Passing the old parameter raises a RuntimeError
+        # when HA cannot attribute the calling integration frame, which aborted the
+        # camera entities at startup. Link to the NVR by registry id where the core
+        # supports it, and fall back to the tuple form on older cores.
+        if _SUPPORTS_VIA_DEVICE_ID:
+            if server_device_id := server_info.get("server_device_id"):
+                device_info["via_device_id"] = server_device_id
+        else:
+            device_info["via_device"] = (DOMAIN, self._server_id)
         self._attr_device_info = device_info
 
     @property
