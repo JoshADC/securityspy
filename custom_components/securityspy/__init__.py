@@ -109,7 +109,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "disable_stream": entry.options.get(CONF_DISABLE_RTSP, False),
     }
 
-    await _async_get_or_create_nvr_device_in_registry(hass, entry, server_info)
+    nvr_device = await _async_get_or_create_nvr_device_in_registry(
+        hass, entry, server_info
+    )
+    # Expose the NVR's device registry id so entities can set `via_device_id`.
+    server_info["server_device_id"] = nvr_device.id
     await hass.config_entries.async_forward_entry_setups(entry, SECURITYSPY_PLATFORMS)
 
     # hass.config_entries.async_setup_platforms(entry, SECURITYSPY_PLATFORMS)
@@ -184,9 +188,9 @@ async def _async_migrate_unique_ids(
 
 async def _async_get_or_create_nvr_device_in_registry(
     hass: HomeAssistant, entry: ConfigEntry, nvr
-) -> None:
+) -> dr.DeviceEntry:
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    return device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, nvr["server_id"])},
         identifiers={(DOMAIN, nvr["server_id"])},
