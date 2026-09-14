@@ -6,6 +6,14 @@
 
 ---
 
+## Version 1.4.2
+
+Release date: unreleased
+
+### Changes
+
+- `FIXED`: **Snapshot aspect ratio** — still images were requested at the dashboard's box size (or a hard-coded 1920x1080), so SecuritySpy stretched any camera whose aspect ratio differed. Snapshots are now fitted inside the requested size at the camera's native aspect ratio.
+
 ## Version 1.3.0
 
 Release date: `2026-03-07`

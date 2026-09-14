@@ -32,10 +32,43 @@ from .secspy_data import (
     process_camera,
 )
 
-DEFAULT_SNAPSHOT_WIDTH = 1920
-DEFAULT_SNAPSHOT_HEIGHT = 1080
-
 _LOGGER = logging.getLogger(__name__)
+
+
+def fit_snapshot_size(
+    native_width: int,
+    native_height: int,
+    width: int | None,
+    height: int | None,
+) -> tuple[int, int] | None:
+    """Fit the camera's native frame inside the requested box, keeping its aspect ratio.
+
+    SecuritySpy renders ++image at exactly the width/height given, so passing HA's
+    box hints through verbatim stretches any camera whose aspect differs from the
+    box. Returns None when no size parameters should be sent: no hints, native
+    size unknown, or the box is at least native size (never upscale; HA downsizes
+    the native image itself if it still needs to).
+    """
+    if native_width <= 0 or native_height <= 0 or not (width or height):
+        return None
+    scale = min(
+        width / native_width if width else 1.0,
+        height / native_height if height else 1.0,
+    )
+    if scale >= 1.0:
+        return None
+    return (
+        max(1, round(native_width * scale)),
+        max(1, round(native_height * scale)),
+    )
+
+
+def _as_int(value) -> int:
+    """Parse a systemInfo dimension; missing or garbage means unknown (0)."""
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return 0
 
 
 class SecSpyServer:
@@ -224,10 +257,16 @@ class SecSpyServer:
 
     async def get_snapshot_image(self, camera_id: str, width: Optional[int] = None, height: Optional[int] = None) -> bytes:
         """ Returns a Snapshot image from the specified Camera. """
-        image_width = width or DEFAULT_SNAPSHOT_WIDTH
-        image_height = height or DEFAULT_SNAPSHOT_HEIGHT
+        device = self._processed_data.get(camera_id, {})
+        size = fit_snapshot_size(
+            _as_int(device.get("image_width")),
+            _as_int(device.get("image_height")),
+            width,
+            height,
+        )
+        size_params = f"&width={size[0]}&height={size[1]}" if size else ""
 
-        image_uri = f"{self._base_url}/image?cameraNum={camera_id}&width={image_width}&height={image_height}&quality=75&auth={self._token}"
+        image_uri = f"{self._base_url}/image?cameraNum={camera_id}{size_params}&quality=75&auth={self._token}"
 
         response = await self.req.get(
             image_uri,
