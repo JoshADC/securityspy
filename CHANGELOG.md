@@ -12,7 +12,7 @@ Release date: unreleased
 
 ### Changes
 
-- `FIXED`: **Snapshot aspect ratio** — still images were requested at the dashboard's box size (or a hard-coded 1920x1080), so SecuritySpy stretched any camera whose aspect ratio differed. Snapshots are now fitted inside the requested size at the camera's native aspect ratio.
+- `FIXED`: **Snapshot aspect ratio** — still images were requested at the dashboard's box size (or a hard-coded 1920x1080), so SecuritySpy stretched any camera whose aspect ratio differed. Snapshots are now fitted inside the requested size at the camera's native aspect ratio. A per-camera *Stretch Snapshots* switch restores the old behaviour for cameras that look better filling the card.
 
 ## Version 1.3.0
 

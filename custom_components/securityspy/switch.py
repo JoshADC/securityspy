@@ -6,9 +6,11 @@ from dataclasses import dataclass
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     DOMAIN,
@@ -85,6 +87,16 @@ async def async_setup_entry(
                 description.name,
                 device_data["name"],
             )
+    for device_id in secspy_data.data:
+        switches.append(
+            SecuritySpyStretchSnapshotsSwitch(
+                secspy_object,
+                secspy_data,
+                server_info,
+                device_id,
+                entry_data["stretch_snapshots"],
+            )
+        )
 
     async_add_entities(switches, True)
 
@@ -152,3 +164,50 @@ class SecuritySpySwitch(SecuritySpyEntity, SwitchEntity):
             )
 
         await self.secspy_data.async_refresh(force_camera_update=True)
+
+
+class SecuritySpyStretchSnapshotsSwitch(SecuritySpyEntity, SwitchEntity, RestoreEntity):
+    """Per-camera choice to stretch snapshots to HA's box instead of fitting them.
+
+    SecuritySpy has no such setting, so this is a local preference: the entity's
+    restored state is the source of truth and it mirrors itself into the
+    per-entry set the camera entity consults on every snapshot.
+    """
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon = "mdi:arrow-expand-horizontal"
+
+    def __init__(
+        self, secspy_object, secspy_data, server_info, device_id, stretch_snapshots
+    ):
+        """Initialize the switch."""
+        super().__init__(
+            secspy_object, secspy_data, server_info, device_id, "stretch_snapshots"
+        )
+        self._stretch_snapshots = stretch_snapshots
+        self._attr_name = f"{self._device_data['name']} Stretch Snapshots"
+        self._attr_is_on = False
+
+    async def async_added_to_hass(self) -> None:
+        """Restore the user's choice; the default is to fit."""
+        await super().async_added_to_hass()
+        last_state = await self.async_get_last_state()
+        if last_state is not None and last_state.state == STATE_ON:
+            self._set_stretch(True)
+
+    def _set_stretch(self, stretch: bool) -> None:
+        if stretch:
+            self._stretch_snapshots.add(self._device_id)
+        else:
+            self._stretch_snapshots.discard(self._device_id)
+        self._attr_is_on = stretch
+
+    async def async_turn_on(self, **kwargs):
+        """Stretch this camera's snapshots to the requested size."""
+        self._set_stretch(True)
+        self.async_write_ha_state()
+
+    async def async_turn_off(self, **kwargs):
+        """Fit this camera's snapshots at their native aspect ratio."""
+        self._set_stretch(False)
+        self.async_write_ha_state()

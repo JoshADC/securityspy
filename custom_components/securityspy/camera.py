@@ -39,6 +39,7 @@ async def async_setup_entry(
     secspy_data = entry_data["secspy_data"]
     server_info = entry_data["server_info"]
     disable_stream = entry_data["disable_stream"]
+    stretch_snapshots = entry_data["stretch_snapshots"]
 
     if not secspy_data.data:
         return
@@ -47,7 +48,12 @@ async def async_setup_entry(
     for camera_id in secspy_data.data:
         cameras.append(
             SecuritySpyCamera(
-                secspy_object, secspy_data, server_info, camera_id, disable_stream
+                secspy_object,
+                secspy_data,
+                server_info,
+                camera_id,
+                disable_stream,
+                stretch_snapshots,
             )
         )
         _LOGGER.debug("Adding Camera Id: %s", camera_id)
@@ -75,11 +81,18 @@ class SecuritySpyCamera(SecuritySpyEntity, Camera):
     """A SecuritySpy Camera."""
 
     def __init__(
-        self, secspy_object, secspy_data, server_info, camera_id, disable_stream
+        self,
+        secspy_object,
+        secspy_data,
+        server_info,
+        camera_id,
+        disable_stream,
+        stretch_snapshots: set[str],
     ):
         """Initialize an SecuritySpy camera."""
         super().__init__(secspy_object, secspy_data, server_info, camera_id, None)
         self._name = self._device_data["name"]
+        self._stretch_snapshots = stretch_snapshots
         self._stream_source = (
             None if disable_stream else self._device_data["live_stream"]
         )
@@ -179,7 +192,10 @@ class SecuritySpyCamera(SecuritySpyEntity, Camera):
         """Return the Camera Image."""
         if self._device_data["online"]:
             last_image = await self.secspy.get_snapshot_image(
-                self._device_id, width, height
+                self._device_id,
+                width,
+                height,
+                stretch=self._device_id in self._stretch_snapshots,
             )
             self._last_image = last_image
             return self._last_image

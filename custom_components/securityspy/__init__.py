@@ -107,6 +107,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "server_info": server_info,
         "update_listener": update_listener,
         "disable_stream": entry.options.get(CONF_DISABLE_RTSP, False),
+        # Camera ids whose "Stretch snapshots" switch is on; the switch entity
+        # maintains it and the camera entity reads it on every snapshot.
+        "stretch_snapshots": set(),
     }
 
     nvr_device = await _async_get_or_create_nvr_device_in_registry(

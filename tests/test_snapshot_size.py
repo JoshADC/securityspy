@@ -83,3 +83,18 @@ def test_snapshot_url_uses_fitted_size_and_omits_size_when_unknown():
     assert "/image?cameraNum=1&width=960&height=720&quality=75&auth=" in session.urls[0]
     assert "/image?cameraNum=1&quality=75&auth=" in session.urls[1]
     assert "/image?cameraNum=9&quality=75&auth=" in session.urls[2]
+
+
+def test_stretch_sends_the_box_verbatim_only_when_both_hints_exist():
+    """Stretch mode hands HA's box straight to SecuritySpy; otherwise it fits."""
+    session = _FakeSession()
+    server = SecSpyServer(session, "nvr.local", 8000, "user", "pass")
+    server._update_device("1", {"image_width": "1280", "image_height": "960"})
+
+    asyncio.run(server.get_snapshot_image("1", 1280, 720, stretch=True))
+    asyncio.run(server.get_snapshot_image("1", 640, None, stretch=True))
+    asyncio.run(server.get_snapshot_image("1", stretch=True))
+
+    assert "/image?cameraNum=1&width=1280&height=720&quality=75&auth=" in session.urls[0]
+    assert "/image?cameraNum=1&width=640&height=480&quality=75&auth=" in session.urls[1]
+    assert "/image?cameraNum=1&quality=75&auth=" in session.urls[2]

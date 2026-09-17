@@ -255,15 +255,27 @@ class SecSpyServer:
         """Returns a Server Information for this NVR."""
         return await self._get_server_information()
 
-    async def get_snapshot_image(self, camera_id: str, width: Optional[int] = None, height: Optional[int] = None) -> bytes:
+    async def get_snapshot_image(
+        self,
+        camera_id: str,
+        width: Optional[int] = None,
+        height: Optional[int] = None,
+        stretch: bool = False,
+    ) -> bytes:
         """ Returns a Snapshot image from the specified Camera. """
         device = self._processed_data.get(camera_id, {})
-        size = fit_snapshot_size(
-            _as_int(device.get("image_width")),
-            _as_int(device.get("image_height")),
-            width,
-            height,
-        )
+        if stretch and width and height:
+            # The user wants the image to fill HA's box (wide multi-sensor
+            # cameras read better squashed than letterboxed), so pass the box
+            # through and let SecuritySpy distort to it.
+            size = (width, height)
+        else:
+            size = fit_snapshot_size(
+                _as_int(device.get("image_width")),
+                _as_int(device.get("image_height")),
+                width,
+                height,
+            )
         size_params = f"&width={size[0]}&height={size[1]}" if size else ""
 
         image_uri = f"{self._base_url}/image?cameraNum={camera_id}{size_params}&quality=75&auth={self._token}"

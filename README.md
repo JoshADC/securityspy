@@ -31,6 +31,8 @@ This integration provides the following entity types:
 
 **Note on live streams:** When using HTTPS, RTSP video streams won't work because RTSP is a separate protocol that uses the HTTP port. Use snapshot mode (JPEG refresh) instead, which works reliably over both HTTP and HTTPS. When using HTTP with RTSP, audio is not available in Home Assistant.
 
+**Note on snapshot aspect ratio:** snapshots are fitted to the dashboard card at the camera's native aspect ratio. For cameras you'd rather see filling the card, such as wide dual-sensor models, turn on that camera's *Stretch Snapshots* switch (under Configuration on the device page).
+
 ## Prerequisites
 
 1. **Enable the Web Server** in SecuritySpy: Settings > Web. Note the port number (default 8000). SSL is now supported.
