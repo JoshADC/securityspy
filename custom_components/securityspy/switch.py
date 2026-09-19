@@ -6,7 +6,6 @@ from dataclasses import dataclass
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -17,6 +16,7 @@ from .const import (
     RECORDING_TYPE_ACTION,
     RECORDING_TYPE_CONTINUOUS,
     RECORDING_TYPE_MOTION,
+    STRETCH_SNAPSHOTS,
 )
 from .entity import SecuritySpyEntity
 from .models import SecSpyRequiredKeysMixin
@@ -98,6 +98,8 @@ async def async_setup_entry(
             )
         )
 
+    # update_before_add costs nothing: no entity here defines async_update, so
+    # HA skips it and the purely local stretch switch causes no NVR traffic.
     async_add_entities(switches, True)
 
 
@@ -169,9 +171,14 @@ class SecuritySpySwitch(SecuritySpyEntity, SwitchEntity):
 class SecuritySpyStretchSnapshotsSwitch(SecuritySpyEntity, SwitchEntity, RestoreEntity):
     """Per-camera choice to stretch snapshots to HA's box instead of fitting them.
 
-    SecuritySpy has no such setting, so this is a local preference: the entity's
-    restored state is the source of truth and it mirrors itself into the
-    per-entry set the camera entity consults on every snapshot.
+    SecuritySpy has no such setting, so this is a local preference. Setup seeds
+    the per-entry set of stretched camera slugs from HA's restore cache before
+    any platform loads; this entity starts from that set, keeps it current, and
+    is a RestoreEntity only so HA persists its state for the next seed.
+
+    Fit is the default on purpose: HA's width/height are a bounding box and other
+    camera integrations return aspect-correct images. The old stretch (and its
+    1920x1080 fallback) was a bug, kept as an opt-in for wide cameras.
     """
 
     _attr_entity_category = EntityCategory.CONFIG
@@ -182,24 +189,19 @@ class SecuritySpyStretchSnapshotsSwitch(SecuritySpyEntity, SwitchEntity, Restore
     ):
         """Initialize the switch."""
         super().__init__(
-            secspy_object, secspy_data, server_info, device_id, "stretch_snapshots"
+            secspy_object, secspy_data, server_info, device_id, STRETCH_SNAPSHOTS
         )
         self._stretch_snapshots = stretch_snapshots
+        # Camera-name prefix like every other entity here; has_entity_name would
+        # be a repo-wide migration, not a one-entity change.
         self._attr_name = f"{self._device_data['name']} Stretch Snapshots"
-        self._attr_is_on = False
-
-    async def async_added_to_hass(self) -> None:
-        """Restore the user's choice; the default is to fit."""
-        await super().async_added_to_hass()
-        last_state = await self.async_get_last_state()
-        if last_state is not None and last_state.state == STATE_ON:
-            self._set_stretch(True)
+        self._attr_is_on = self._camera_slug in stretch_snapshots
 
     def _set_stretch(self, stretch: bool) -> None:
         if stretch:
-            self._stretch_snapshots.add(self._device_id)
+            self._stretch_snapshots.add(self._camera_slug)
         else:
-            self._stretch_snapshots.discard(self._device_id)
+            self._stretch_snapshots.discard(self._camera_slug)
         self._attr_is_on = stretch
 
     async def async_turn_on(self, **kwargs):

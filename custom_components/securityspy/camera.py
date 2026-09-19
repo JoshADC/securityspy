@@ -195,7 +195,7 @@ class SecuritySpyCamera(SecuritySpyEntity, Camera):
                 self._device_id,
                 width,
                 height,
-                stretch=self._device_id in self._stretch_snapshots,
+                stretch=self._camera_slug in self._stretch_snapshots,
             )
             self._last_image = last_image
             return self._last_image

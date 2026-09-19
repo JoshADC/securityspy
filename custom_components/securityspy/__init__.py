@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Iterable, Mapping
 
 from aiohttp import ClientError
 from homeassistant.config_entries import ConfigEntry
@@ -11,12 +12,14 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
     CONF_PASSWORD,
+    STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import restore_state
 from .const import slugify_camera_name
 from .pysecspy.errors import InvalidCredentials, RequestError
 from .pysecspy.secspy_server import SecSpyServer
@@ -35,6 +38,7 @@ from .const import (
     SERVICE_ENABLE_SCHEDULE_PRESET,
     ENABLE_SCHEDULE_PRESET_SCHEMA,
     MIN_SECSPY_VERSION,
+    STRETCH_SNAPSHOTS,
 )
 from .data import SecuritySpyData
 
@@ -107,9 +111,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "server_info": server_info,
         "update_listener": update_listener,
         "disable_stream": entry.options.get(CONF_DISABLE_RTSP, False),
-        # Camera ids whose "Stretch snapshots" switch is on; the switch entity
-        # maintains it and the camera entity reads it on every snapshot.
-        "stretch_snapshots": set(),
+        # Slugs of cameras whose "Stretch Snapshots" switch is on. Seeded here,
+        # before any platform loads: platforms set up concurrently, and one fitted
+        # image served before the switch is ready makes the frontend keep asking
+        # for that image's shape for the rest of the page session.
+        "stretch_snapshots": _async_restored_stretch_slugs(hass, entry, server_info),
     }
 
     nvr_device = await _async_get_or_create_nvr_device_in_registry(
@@ -134,6 +140,50 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     return True
+
+
+def stretch_slugs_from_restored(
+    switches: Iterable[tuple[str, str]],
+    restored_states: Mapping[str, str],
+    server_id: str,
+) -> set[str]:
+    """Return slugs of cameras whose Stretch Snapshots switch was last on.
+
+    `switches` are (entity_id, unique_id) registry pairs; anything that is not
+    one of this server's stretch switches is ignored. Keyed by slug because the
+    SecuritySpy camera number changes when cameras are reordered.
+    """
+    prefix = f"{STRETCH_SNAPSHOTS}_{server_id}_"
+    return {
+        unique_id.removeprefix(prefix)
+        for entity_id, unique_id in switches
+        if unique_id.startswith(prefix) and restored_states.get(entity_id) == STATE_ON
+    }
+
+
+@callback
+def _async_restored_stretch_slugs(
+    hass: HomeAssistant, entry: ConfigEntry, server_info
+) -> set[str]:
+    """Read the stretch switches' last states from HA's restore cache."""
+    registry = er.async_get(hass)
+    last_states = restore_state.async_get(hass).last_states
+    # A disabled switch can't be turned off by the user, so its stale stored
+    # state must not keep a camera stretched.
+    entries = [
+        entity_entry
+        for entity_entry in er.async_entries_for_config_entry(registry, entry.entry_id)
+        if not entity_entry.disabled_by
+    ]
+    return stretch_slugs_from_restored(
+        ((entity_entry.entity_id, entity_entry.unique_id) for entity_entry in entries),
+        {
+            entity_entry.entity_id: last_states[entity_entry.entity_id].state.state
+            for entity_entry in entries
+            if entity_entry.entity_id in last_states
+        },
+        server_info["server_id"],
+    )
 
 
 async def _async_migrate_unique_ids(
