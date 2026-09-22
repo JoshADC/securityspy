@@ -2,13 +2,16 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Iterable
 
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, slugify_camera_name
 from .entity import SecuritySpyEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,9 +71,65 @@ async def async_setup_entry(
                     )
                 )
 
+    _async_remove_stale_buttons(
+        hass, entry, server_info, secspy_data, {button.unique_id for button in sensors}
+    )
     async_add_entities(sensors)
 
     return True
+
+
+def stale_button_entity_ids(
+    registered: Iterable[tuple[str, str]],
+    expected_unique_ids: set[str],
+    online_camera_suffixes: set[str],
+) -> list[str]:
+    """Pick registered buttons that an online camera no longer offers.
+
+    Only cameras SecuritySpy currently reports online are candidates: an offline
+    or vanished camera keeps its buttons, so a transient outage can't delete
+    them along with the user's customisations.
+    """
+    return [
+        entity_id
+        for entity_id, unique_id in registered
+        if unique_id not in expected_unique_ids
+        and any(unique_id.endswith(suffix) for suffix in online_camera_suffixes)
+    ]
+
+
+@callback
+def _async_remove_stale_buttons(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    server_info,
+    secspy_data,
+    expected_unique_ids: set[str],
+) -> None:
+    """Remove registry entries for PTZ buttons that are no longer created.
+
+    SecuritySpy reports ptzcapabilities from the camera's driver profile, so a
+    fixed camera claims PTZ until "Disable PTZ" is ticked in its Device settings.
+    After that the buttons stop being created here but would otherwise linger in
+    the registry as unavailable.
+    """
+    server_id = server_info["server_id"]
+    online_suffixes = {
+        f"_{server_id}_{slugify_camera_name(device_data['name'])}"
+        for device_data in secspy_data.data.values()
+        if device_data["online"]
+    }
+    registry = er.async_get(hass)
+    registered = [
+        (entity_entry.entity_id, entity_entry.unique_id)
+        for entity_entry in er.async_entries_for_config_entry(registry, entry.entry_id)
+        if entity_entry.domain == Platform.BUTTON
+    ]
+    for entity_id in stale_button_entity_ids(
+        registered, expected_unique_ids, online_suffixes
+    ):
+        _LOGGER.debug("Removing PTZ button %s: camera no longer reports it", entity_id)
+        registry.async_remove(entity_id)
 
 
 class SecuritySpyButtonEntity(SecuritySpyEntity, ButtonEntity):
