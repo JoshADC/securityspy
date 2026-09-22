@@ -33,9 +33,9 @@ CONF_USE_SSL = "use_ssl"
 CONF_VERIFY_SSL = "verify_ssl"
 CONF_DISABLE_RTSP = "disable_rtsp"
 CONF_MIN_SCORE = "min_event_score"
-# unique_id prefix of the per-camera "Stretch Snapshots" switch; setup parses it
+# unique_id prefix of the per-camera "Fit Snapshots" switch; setup parses it
 # to restore the choice before platforms load.
-STRETCH_SNAPSHOTS = "stretch_snapshots"
+FIT_SNAPSHOTS = "fit_snapshots"
 CONFIG_OPTIONS = [
     CONF_DISABLE_RTSP,
     CONF_MIN_SCORE,

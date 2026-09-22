@@ -12,7 +12,11 @@ Release date: unreleased
 
 ### Changes
 
-- `FIXED`: **Snapshot aspect ratio** — still images were requested at the dashboard's box size (or a hard-coded 1920x1080), so SecuritySpy stretched any camera whose aspect ratio differed. Snapshots are now fitted inside the requested size at the camera's native aspect ratio. A per-camera *Stretch Snapshots* switch restores the old behaviour for cameras that look better filling the card.
+- `NEW`: **Fit Snapshots switch** — a per-camera switch that requests still images at the camera's native aspect ratio, fitted inside the space Home Assistant asks for, instead of stretched to fill it. Useful for 4:3, portrait, or any camera whose shape differs from its dashboard card.
+
+  Off by default, so **upgrading changes nothing**: every camera keeps requesting exactly what it did before, and a camera only changes shape once you turn its switch on. Wide multi-sensor cameras generally look better left off — filling the card rather than letterboxed into a thin strip.
+
+  Thanks to @jpettitt for the fix and the test scaffold, and to @photonclock for the review that turned it into a per-camera choice.
 
 ## Version 1.3.0
 

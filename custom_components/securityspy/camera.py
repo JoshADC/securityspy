@@ -39,7 +39,7 @@ async def async_setup_entry(
     secspy_data = entry_data["secspy_data"]
     server_info = entry_data["server_info"]
     disable_stream = entry_data["disable_stream"]
-    stretch_snapshots = entry_data["stretch_snapshots"]
+    fit_snapshots = entry_data["fit_snapshots"]
 
     if not secspy_data.data:
         return
@@ -53,7 +53,7 @@ async def async_setup_entry(
                 server_info,
                 camera_id,
                 disable_stream,
-                stretch_snapshots,
+                fit_snapshots,
             )
         )
         _LOGGER.debug("Adding Camera Id: %s", camera_id)
@@ -87,12 +87,12 @@ class SecuritySpyCamera(SecuritySpyEntity, Camera):
         server_info,
         camera_id,
         disable_stream,
-        stretch_snapshots: set[str],
+        fit_snapshots: set[str],
     ):
         """Initialize an SecuritySpy camera."""
         super().__init__(secspy_object, secspy_data, server_info, camera_id, None)
         self._name = self._device_data["name"]
-        self._stretch_snapshots = stretch_snapshots
+        self._fit_snapshots = fit_snapshots
         self._stream_source = (
             None if disable_stream else self._device_data["live_stream"]
         )
@@ -195,7 +195,7 @@ class SecuritySpyCamera(SecuritySpyEntity, Camera):
                 self._device_id,
                 width,
                 height,
-                stretch=self._camera_slug in self._stretch_snapshots,
+                fit=self._camera_slug in self._fit_snapshots,
             )
             self._last_image = last_image
             return self._last_image

@@ -32,6 +32,9 @@ from .secspy_data import (
     process_camera,
 )
 
+DEFAULT_SNAPSHOT_WIDTH = 1920
+DEFAULT_SNAPSHOT_HEIGHT = 1080
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -260,16 +263,22 @@ class SecSpyServer:
         camera_id: str,
         width: Optional[int] = None,
         height: Optional[int] = None,
-        stretch: bool = False,
+        fit: bool = False,
     ) -> bytes:
         """ Returns a Snapshot image from the specified Camera. """
-        device = self._processed_data.get(camera_id, {})
-        if stretch and width and height:
-            # The user wants the image to fill HA's box (wide multi-sensor
-            # cameras read better squashed than letterboxed), so pass the box
-            # through and let SecuritySpy distort to it.
-            size = (width, height)
+        if not fit:
+            # Default: byte-for-byte the request every release before this one
+            # sent. SecuritySpy renders ++image at exactly the size asked for,
+            # so a camera whose aspect differs from HA's box comes back
+            # distorted -- but that is the look existing dashboards were built
+            # against, and wide multi-sensor cameras read better filling the
+            # card than letterboxed into a strip. Opt into `fit` per camera.
+            size = (
+                width or DEFAULT_SNAPSHOT_WIDTH,
+                height or DEFAULT_SNAPSHOT_HEIGHT,
+            )
         else:
+            device = self._processed_data.get(camera_id, {})
             size = fit_snapshot_size(
                 _as_int(device.get("image_width")),
                 _as_int(device.get("image_height")),

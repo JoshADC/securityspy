@@ -31,7 +31,7 @@ This integration provides the following entity types:
 
 **Note on live streams:** When using HTTPS, RTSP video streams won't work because RTSP is a separate protocol that uses the HTTP port. Use snapshot mode (JPEG refresh) instead, which works reliably over both HTTP and HTTPS. When using HTTP with RTSP, audio is not available in Home Assistant.
 
-**Note on snapshot aspect ratio:** snapshots are fitted to the dashboard card at the camera's native aspect ratio. For cameras you'd rather see filling the card, such as wide dual-sensor models, turn on that camera's *Stretch Snapshots* switch (under Configuration on the device page).
+**Note on snapshot aspect ratio:** by default snapshots are stretched to fill the dashboard card, which is what this integration has always done. For a camera you'd rather see at its true shape — a 4:3 or portrait camera in a 16:9 card, say — turn on that camera's *Fit Snapshots* switch (under Configuration on the device page). Wide dual-sensor cameras usually read better left as they are, filling the card rather than letterboxed into a strip.
 
 ## Prerequisites
 

@@ -16,7 +16,7 @@ from .const import (
     RECORDING_TYPE_ACTION,
     RECORDING_TYPE_CONTINUOUS,
     RECORDING_TYPE_MOTION,
-    STRETCH_SNAPSHOTS,
+    FIT_SNAPSHOTS,
 )
 from .entity import SecuritySpyEntity
 from .models import SecSpyRequiredKeysMixin
@@ -89,17 +89,17 @@ async def async_setup_entry(
             )
     for device_id in secspy_data.data:
         switches.append(
-            SecuritySpyStretchSnapshotsSwitch(
+            SecuritySpyFitSnapshotsSwitch(
                 secspy_object,
                 secspy_data,
                 server_info,
                 device_id,
-                entry_data["stretch_snapshots"],
+                entry_data["fit_snapshots"],
             )
         )
 
     # update_before_add costs nothing: no entity here defines async_update, so
-    # HA skips it and the purely local stretch switch causes no NVR traffic.
+    # HA skips it and the purely local fit switch causes no NVR traffic.
     async_add_entities(switches, True)
 
 
@@ -168,48 +168,50 @@ class SecuritySpySwitch(SecuritySpyEntity, SwitchEntity):
         await self.secspy_data.async_refresh(force_camera_update=True)
 
 
-class SecuritySpyStretchSnapshotsSwitch(SecuritySpyEntity, SwitchEntity, RestoreEntity):
-    """Per-camera choice to stretch snapshots to HA's box instead of fitting them.
+class SecuritySpyFitSnapshotsSwitch(SecuritySpyEntity, SwitchEntity, RestoreEntity):
+    """Per-camera choice to fit snapshots to their aspect ratio instead of stretching.
 
     SecuritySpy has no such setting, so this is a local preference. Setup seeds
-    the per-entry set of stretched camera slugs from HA's restore cache before
-    any platform loads; this entity starts from that set, keeps it current, and
-    is a RestoreEntity only so HA persists its state for the next seed.
+    the per-entry set of fitted camera slugs from HA's restore cache before any
+    platform loads; this entity starts from that set, keeps it current, and is a
+    RestoreEntity only so HA persists its state for the next seed.
 
-    Fit is the default on purpose: HA's width/height are a bounding box and other
-    camera integrations return aspect-correct images. The old stretch (and its
-    1920x1080 fallback) was a bug, kept as an opt-in for wide cameras.
+    Off is the default on purpose. Stretching to HA's box is what every earlier
+    release did, so an upgrade leaves every dashboard looking exactly as it did;
+    a camera only changes shape once someone turns this on for it. It also keeps
+    wide multi-sensor cameras filling their card rather than letterboxed into a
+    strip, which is why the choice is per camera rather than global.
     """
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon = "mdi:arrow-expand-horizontal"
+    _attr_icon = "mdi:aspect-ratio"
 
     def __init__(
-        self, secspy_object, secspy_data, server_info, device_id, stretch_snapshots
+        self, secspy_object, secspy_data, server_info, device_id, fit_snapshots
     ):
         """Initialize the switch."""
         super().__init__(
-            secspy_object, secspy_data, server_info, device_id, STRETCH_SNAPSHOTS
+            secspy_object, secspy_data, server_info, device_id, FIT_SNAPSHOTS
         )
-        self._stretch_snapshots = stretch_snapshots
+        self._fit_snapshots = fit_snapshots
         # Camera-name prefix like every other entity here; has_entity_name would
         # be a repo-wide migration, not a one-entity change.
-        self._attr_name = f"{self._device_data['name']} Stretch Snapshots"
-        self._attr_is_on = self._camera_slug in stretch_snapshots
+        self._attr_name = f"{self._device_data['name']} Fit Snapshots"
+        self._attr_is_on = self._camera_slug in fit_snapshots
 
-    def _set_stretch(self, stretch: bool) -> None:
-        if stretch:
-            self._stretch_snapshots.add(self._camera_slug)
+    def _set_fit(self, fit: bool) -> None:
+        if fit:
+            self._fit_snapshots.add(self._camera_slug)
         else:
-            self._stretch_snapshots.discard(self._camera_slug)
-        self._attr_is_on = stretch
+            self._fit_snapshots.discard(self._camera_slug)
+        self._attr_is_on = fit
 
     async def async_turn_on(self, **kwargs):
-        """Stretch this camera's snapshots to the requested size."""
-        self._set_stretch(True)
+        """Fit this camera's snapshots at their native aspect ratio."""
+        self._set_fit(True)
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
-        """Fit this camera's snapshots at their native aspect ratio."""
-        self._set_stretch(False)
+        """Stretch this camera's snapshots to the requested size."""
+        self._set_fit(False)
         self.async_write_ha_state()
