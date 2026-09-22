@@ -8,7 +8,7 @@
 
 ## Version 1.4.2
 
-Release date: unreleased
+Release date: `2026-09-21`
 
 ### Changes
 
