@@ -8,15 +8,16 @@ from homeassistant.const import (
     CONF_FILENAME,
 )
 
-
-def slugify_camera_name(name: str) -> str:
-    """Create a stable slug from a camera name."""
-    return re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")
 from .pysecspy.const import (
     RECORDING_TYPE_ACTION,
     RECORDING_TYPE_MOTION,
     RECORDING_TYPE_CONTINUOUS,
 )
+
+
+def slugify_camera_name(name: str) -> str:
+    """Create a stable slug from a camera name."""
+    return re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")
 
 DOMAIN = "securityspy"
 UNIQUE_ID = "unique_id"
