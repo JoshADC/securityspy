@@ -1,6 +1,5 @@
 """SecuritySpy Data."""
 import datetime
-import json
 import logging
 import time
 from collections import OrderedDict
