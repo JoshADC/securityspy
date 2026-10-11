@@ -33,6 +33,8 @@ This integration provides the following entity types:
 
 **Note on snapshot aspect ratio:** by default snapshots are stretched to fill the dashboard card, which is what this integration has always done. For a camera you'd rather see at its true shape — a 4:3 or portrait camera in a 16:9 card, say — turn on that camera's *Fit Snapshots* switch (under Configuration on the device page). Wide dual-sensor cameras usually read better left as they are, filling the card rather than letterboxed into a strip.
 
+**Note on PTZ buttons:** SecuritySpy reports PTZ capability from the camera's driver profile, so fixed Reolink, Dahua or ONVIF cameras can get PTZ buttons. For such a camera, tick *Disable PTZ* in SecuritySpy under Settings > Cameras > Device (advanced options), then reload the integration; its buttons are removed automatically.
+
 ## Prerequisites
 
 1. **Enable the Web Server** in SecuritySpy: Settings > Web. Note the port number (default 8000). SSL is now supported.
