@@ -8,11 +8,13 @@
 
 ## Version 1.4.3
 
-Release date: unreleased
+Release date: `2026-10-15`
 
 ### Changes
 
-- `FIXED`: **Stale PTZ buttons** — buttons for cameras that no longer report PTZ (e.g. after ticking *Disable PTZ* in SecuritySpy) are now removed when the integration reloads, instead of lingering as unavailable. Offline cameras keep theirs.
+- `FIXED`: **Stale PTZ buttons** — buttons for cameras that no longer report PTZ (e.g. after ticking *Disable PTZ* in SecuritySpy) are now removed when the integration reloads, instead of lingering as unavailable. Offline cameras keep theirs. Upgrading changes nothing for a camera that still reports PTZ.
+
+  Thanks to @jpettitt for the fix, and for clearing the old lint findings in the bundled library.
 
 ## Version 1.4.2
 
@@ -25,7 +27,6 @@ Release date: `2026-09-21`
   Off by default, so **upgrading changes nothing**: every camera keeps requesting exactly what it did before, and a camera only changes shape once you turn its switch on. Wide multi-sensor cameras generally look better left off — filling the card rather than letterboxed into a thin strip.
 
   Thanks to @jpettitt for the fix and the test scaffold, and to @photonclock for the review that turned it into a per-camera choice.
-
 
 ## Version 1.3.0
 
