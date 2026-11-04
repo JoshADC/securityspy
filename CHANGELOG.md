@@ -6,6 +6,16 @@
 
 ---
 
+## Version 1.4.4
+
+Release date: `2026-11-04`
+
+### Changes
+
+- `FIXED`: **Integration fails to load on Home Assistant 2026.11** (#10) — Home Assistant 2026.11 removed an internal list that the Fit Snapshots feature read at startup, which stopped setup with `'RestoreStateData' object has no attribute 'last_states'` and left every camera unavailable. Fit Snapshots now uses the new lookup on 2026.11 and the old list on earlier versions, and your switch settings carry over. If Home Assistant changes this again, the switches start off and a warning is logged, rather than the cameras failing to load. Upgrading changes nothing on versions before 2026.11.
+
+  Thanks to @rapamatic for the report.
+
 ## Version 1.4.3
 
 Release date: `2026-10-15`
