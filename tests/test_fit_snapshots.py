@@ -6,7 +6,7 @@ of the contract is the single lookup `self._camera_slug in fit_snapshots`.
 """
 from types import SimpleNamespace
 
-from custom_components.securityspy import fit_slugs_from_restored
+from custom_components.securityspy import fit_slugs_from_restored, stored_state_lookup
 from custom_components.securityspy.const import slugify_camera_name
 from custom_components.securityspy.switch import SecuritySpyFitSnapshotsSwitch
 
@@ -50,6 +50,31 @@ def test_seed_reads_only_this_servers_fit_switches_that_were_on():
         "garage",
         "west_yard",
     }
+
+
+def test_lookup_uses_the_getter_from_ha_2026_11():
+    """HA 2026.11 removed `last_states` in favour of a getter method (#10)."""
+    stored = SimpleNamespace(state=SimpleNamespace(state="on"))
+    data = SimpleNamespace(
+        async_get_stored_state={"switch.garage_fit_snapshots": stored}.get
+    )
+    lookup = stored_state_lookup(data)
+    assert lookup("switch.garage_fit_snapshots") is stored
+    assert lookup("switch.other") is None
+
+
+def test_lookup_falls_back_to_last_states_before_ha_2026_11():
+    """Older cores only have the dict, and `hacs.json` still declares them."""
+    stored = SimpleNamespace(state=SimpleNamespace(state="on"))
+    data = SimpleNamespace(last_states={"switch.garage_fit_snapshots": stored})
+    lookup = stored_state_lookup(data)
+    assert lookup("switch.garage_fit_snapshots") is stored
+    assert lookup("switch.other") is None
+
+
+def test_lookup_finds_nothing_rather_than_crashing_if_ha_changes_again():
+    """A display preference must not stop every camera from loading."""
+    assert stored_state_lookup(SimpleNamespace())("switch.garage_fit_snapshots") is None
 
 
 def test_switch_starts_from_the_seed_and_mutates_the_shared_set():

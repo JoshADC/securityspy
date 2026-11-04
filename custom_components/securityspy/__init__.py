@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
+from typing import Any
 
 from aiohttp import ClientError
 from homeassistant.config_entries import ConfigEntry
@@ -161,13 +162,34 @@ def fit_slugs_from_restored(
     }
 
 
+def stored_state_lookup(restore_data) -> Callable[[str], Any]:
+    """Return a function that finds an entity's stored state by entity_id.
+
+    HA 2026.11 replaced the `last_states` dict with `async_get_stored_state`.
+    `hacs.json` declares 2024.4 as the minimum, so both have to work. The seed
+    is only a display preference, so if HA changes this again the switches start
+    off instead of the whole integration failing to load.
+    """
+    getter = getattr(restore_data, "async_get_stored_state", None)
+    if getter is not None:
+        return getter
+    last_states = getattr(restore_data, "last_states", None)
+    if last_states is not None:
+        return last_states.get
+    _LOGGER.warning(
+        "Could not read Home Assistant's restore cache; "
+        "Fit Snapshots switches will start off"
+    )
+    return lambda _entity_id: None
+
+
 @callback
 def _async_restored_fit_slugs(
     hass: HomeAssistant, entry: ConfigEntry, server_info
 ) -> set[str]:
     """Read the fit switches' last states from HA's restore cache."""
     registry = er.async_get(hass)
-    last_states = restore_state.async_get(hass).last_states
+    lookup = stored_state_lookup(restore_state.async_get(hass))
     # A disabled switch can't be turned off by the user, so its stale stored
     # state must not keep a camera fitted.
     entries = [
@@ -175,13 +197,14 @@ def _async_restored_fit_slugs(
         for entity_entry in er.async_entries_for_config_entry(registry, entry.entry_id)
         if not entity_entry.disabled_by
     ]
+    restored_states = {}
+    for entity_entry in entries:
+        stored = lookup(entity_entry.entity_id)
+        if stored is not None:
+            restored_states[entity_entry.entity_id] = stored.state.state
     return fit_slugs_from_restored(
         ((entity_entry.entity_id, entity_entry.unique_id) for entity_entry in entries),
-        {
-            entity_entry.entity_id: last_states[entity_entry.entity_id].state.state
-            for entity_entry in entries
-            if entity_entry.entity_id in last_states
-        },
+        restored_states,
         server_info["server_id"],
     )
 
